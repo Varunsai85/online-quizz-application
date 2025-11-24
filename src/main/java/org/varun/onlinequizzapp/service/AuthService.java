@@ -1,15 +1,23 @@
 package org.varun.onlinequizzapp.service;
 
 import jakarta.mail.MessagingException;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.varun.onlinequizzapp.dto.ApiResponse;
+import org.varun.onlinequizzapp.dto.SignInDto;
 import org.varun.onlinequizzapp.dto.SignUpDto;
+import org.varun.onlinequizzapp.dto.VerificationCodeDto;
 import org.varun.onlinequizzapp.model.User;
 import org.varun.onlinequizzapp.model.type.Role;
 import org.varun.onlinequizzapp.repository.UserRepository;
@@ -25,6 +33,8 @@ public class AuthService {
     private final UserRepository userRepo;
     private final BCryptPasswordEncoder encoder;
     private final EmailService emailService;
+    private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
 
     public ResponseEntity<?> signUp(@Valid SignUpDto signUpDto) {
         Optional<User> existingUser = userRepo.findUserByEmail(signUpDto.email());
@@ -48,12 +58,64 @@ public class AuthService {
             sendVerificationEmail(newUser);
             return new ResponseEntity<>(new ApiResponse<>("User registered successfully, Please verify your account"), HttpStatus.CREATED);
         } catch (MessagingException e) {
-            log.error("Verification failed for {} {}", newUser.getEmail(), e.getMessage());
+            log.error("[Sign-up] Verification failed for {} {}", newUser.getEmail(), e.getMessage());
             return new ResponseEntity<>(new ApiResponse<>("Failed to send verification email"), HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception e) {
-            log.error("Something went wrong {}", e.getMessage());
+            log.error("[Sign-up] Something went wrong {}", e.getMessage());
             return new ResponseEntity<>(new ApiResponse<>("Something went wrong"), HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    public ResponseEntity<?> signIn(@Valid SignInDto signInDto) {
+        try {
+            User user=userRepo.findByUsernameOrEmail(signInDto.login(), signInDto.login()).orElseThrow(()->new UsernameNotFoundException("User not found"));
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(signInDto.login(), signInDto.password()));
+            String jwtToken = jwtService.generateJwtToken(user.getEmail());
+            return new ResponseEntity<>(new ApiResponse<>("User logged in successfully", jwtToken), HttpStatus.OK);
+        } catch (UsernameNotFoundException e) {
+            log.error("[Sign-in] User {} not found", signInDto.login());
+            return new ResponseEntity<>(new ApiResponse<>("User not found", e.getMessage()), HttpStatus.NOT_FOUND);
+        } catch (DisabledException e) {
+            log.error("[Sign-in] User {}, is not verified", signInDto.login());
+            return new ResponseEntity<>(new ApiResponse<>("Please verify your account", e.getMessage()), HttpStatus.UNAUTHORIZED);
+        } catch (BadCredentialsException e) {
+            log.error("[Sign-in] Wrong credentials for user {}",signInDto.login());
+            return new ResponseEntity<>(new ApiResponse<>("Invalid credentials", e.getMessage()), HttpStatus.UNAUTHORIZED);
+        } catch (Exception e) {
+            log.error("[Sign-in] Encountered error in signIn method in authService");
+            return new ResponseEntity<>(new ApiResponse<>("Something went wrong", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Transactional
+    public ResponseEntity<?> verifyCode(@Valid VerificationCodeDto verificationCodeDto) {
+        try {
+            User user=userRepo.findUserByEmail(verificationCodeDto.email()).orElseThrow(()->new UsernameNotFoundException("User not found"));
+            if(user.getCodeExpiresIn().isBefore(LocalDateTime.now())){
+                log.warn("[Verify-code] verification code expired for user {}",verificationCodeDto.email());
+                return new ResponseEntity<>(new ApiResponse<>("Verification code expired"),HttpStatus.FORBIDDEN);
+            }
+            if(user.getVerificationCode().equals(verificationCodeDto.code())){
+                user.setCodeExpiresIn(null);
+                user.setVerificationCode(null);
+                user.setEnabled(true);
+                userRepo.save(user);
+                return new ResponseEntity<>(new ApiResponse<>("User verified successfully"),HttpStatus.OK);
+            }
+            else {
+                return new ResponseEntity<>(new ApiResponse<>("Invalid verification code"),HttpStatus.UNAUTHORIZED);
+            }
+        }catch (UsernameNotFoundException e){
+            log.error("[Verify-code] User {}, not found",verificationCodeDto.email());
+            return new ResponseEntity<>(new ApiResponse<>("User not found",e.getMessage()),HttpStatus.NOT_FOUND);
+        }catch (Exception e){
+            log.error("[Verify-code] Encountered error in verifyCode method in AuthService");
+            return new ResponseEntity<>(new ApiResponse<>("Something went wrong", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public ResponseEntity<?> resendVerificationEmail(@Valid String email){
+        return null; //TO DO
     }
 
     private void sendVerificationEmail(User user) throws MessagingException {
