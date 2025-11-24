@@ -37,10 +37,18 @@ public class AuthService {
     private final JwtService jwtService;
 
     public ResponseEntity<?> signUp(@Valid SignUpDto signUpDto) {
+        //Check if username exists
+        Optional<User> userNameExistingUser = userRepo.findUserByUsername(signUpDto.username());
+        if (userNameExistingUser.isPresent()) {
+            return new ResponseEntity<>(new ApiResponse<>("Username not available"), HttpStatus.BAD_REQUEST);
+        }
+
+        //Check if email exists
         Optional<User> existingUser = userRepo.findUserByEmail(signUpDto.email());
         if (existingUser.isPresent()) {
+            //Check if User is verified?
             if (existingUser.get().isEnabled()) {
-                return new ResponseEntity<>(new ApiResponse<>("User already exists"), HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>(new ApiResponse<>("User with this email already exists"), HttpStatus.BAD_REQUEST);
             }
             return new ResponseEntity<>(new ApiResponse<>("User already exists, but not verified"), HttpStatus.BAD_REQUEST);
         }
@@ -53,8 +61,8 @@ public class AuthService {
                 .codeExpiresIn(LocalDateTime.now().plusMinutes(10))
                 .role(Role.USER)
                 .build();
-        userRepo.save(newUser);
         try {
+            userRepo.save(newUser);
             sendVerificationEmail(newUser);
             return new ResponseEntity<>(new ApiResponse<>("User registered successfully, Please verify your account"), HttpStatus.CREATED);
         } catch (MessagingException e) {
@@ -123,8 +131,8 @@ public class AuthService {
                 userRepo.save(user);
                 sendVerificationEmail(user);
                 return new ResponseEntity<>(new ApiResponse<>("Verification mail resent"), HttpStatus.OK);
-            }else {
-                return new ResponseEntity<>(new ApiResponse<>("User already verified"),HttpStatus.BAD_REQUEST);
+            } else {
+                return new ResponseEntity<>(new ApiResponse<>("User already verified"), HttpStatus.BAD_REQUEST);
             }
         } catch (MessagingException e) {
             log.error("[resend-verify-mail] Verification failed for {} {}", user.getEmail(), e.getMessage());
