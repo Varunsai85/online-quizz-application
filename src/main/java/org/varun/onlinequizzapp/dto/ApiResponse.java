@@ -1,4 +1,4 @@
 package org.varun.onlinequizzapp.dto;
 
-public record SignUpResponse() {
+public class ApiResponse {
 }
