@@ -61,14 +61,14 @@ public class AuthService {
             log.error("[Sign-up] Verification failed for {} {}", newUser.getEmail(), e.getMessage());
             return new ResponseEntity<>(new ApiResponse<>("Failed to send verification email"), HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception e) {
-            log.error("[Sign-up] Something went wrong {}", e.getMessage());
+            log.error("[Sign-up] Encountered error in AuthService {}", e.getMessage());
             return new ResponseEntity<>(new ApiResponse<>("Something went wrong"), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     public ResponseEntity<?> signIn(@Valid SignInDto signInDto) {
         try {
-            User user=userRepo.findByUsernameOrEmail(signInDto.login(), signInDto.login()).orElseThrow(()->new UsernameNotFoundException("User not found"));
+            User user = userRepo.findByUsernameOrEmail(signInDto.login(), signInDto.login()).orElseThrow(() -> new UsernameNotFoundException("User not found"));
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(signInDto.login(), signInDto.password()));
             String jwtToken = jwtService.generateJwtToken(user.getEmail());
             return new ResponseEntity<>(new ApiResponse<>("User logged in successfully", jwtToken), HttpStatus.OK);
@@ -79,10 +79,10 @@ public class AuthService {
             log.error("[Sign-in] User {}, is not verified", signInDto.login());
             return new ResponseEntity<>(new ApiResponse<>("Please verify your account", e.getMessage()), HttpStatus.UNAUTHORIZED);
         } catch (BadCredentialsException e) {
-            log.error("[Sign-in] Wrong credentials for user {}",signInDto.login());
+            log.error("[Sign-in] Wrong credentials for user {}", signInDto.login());
             return new ResponseEntity<>(new ApiResponse<>("Invalid credentials", e.getMessage()), HttpStatus.UNAUTHORIZED);
         } catch (Exception e) {
-            log.error("[Sign-in] Encountered error in signIn method in authService");
+            log.error("[Sign-in] Encountered error in AuthService");
             return new ResponseEntity<>(new ApiResponse<>("Something went wrong", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -90,32 +90,49 @@ public class AuthService {
     @Transactional
     public ResponseEntity<?> verifyCode(@Valid VerificationCodeDto verificationCodeDto) {
         try {
-            User user=userRepo.findUserByEmail(verificationCodeDto.email()).orElseThrow(()->new UsernameNotFoundException("User not found"));
-            if(user.getCodeExpiresIn().isBefore(LocalDateTime.now())){
-                log.warn("[Verify-code] verification code expired for user {}",verificationCodeDto.email());
-                return new ResponseEntity<>(new ApiResponse<>("Verification code expired"),HttpStatus.FORBIDDEN);
+            User user = userRepo.findUserByEmail(verificationCodeDto.email()).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+            if (user.getCodeExpiresIn().isBefore(LocalDateTime.now())) {
+                log.warn("[Verify-code] verification code expired for user {}", verificationCodeDto.email());
+                return new ResponseEntity<>(new ApiResponse<>("Verification code expired"), HttpStatus.FORBIDDEN);
             }
-            if(user.getVerificationCode().equals(verificationCodeDto.code())){
+            if (user.getVerificationCode().equals(verificationCodeDto.code())) {
                 user.setCodeExpiresIn(null);
                 user.setVerificationCode(null);
                 user.setEnabled(true);
                 userRepo.save(user);
-                return new ResponseEntity<>(new ApiResponse<>("User verified successfully"),HttpStatus.OK);
+                return new ResponseEntity<>(new ApiResponse<>("User verified successfully"), HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(new ApiResponse<>("Invalid verification code"), HttpStatus.UNAUTHORIZED);
             }
-            else {
-                return new ResponseEntity<>(new ApiResponse<>("Invalid verification code"),HttpStatus.UNAUTHORIZED);
-            }
-        }catch (UsernameNotFoundException e){
-            log.error("[Verify-code] User {}, not found",verificationCodeDto.email());
-            return new ResponseEntity<>(new ApiResponse<>("User not found",e.getMessage()),HttpStatus.NOT_FOUND);
-        }catch (Exception e){
-            log.error("[Verify-code] Encountered error in verifyCode method in AuthService");
+        } catch (UsernameNotFoundException e) {
+            log.error("[Verify-code] User {}, not found", verificationCodeDto.email());
+            return new ResponseEntity<>(new ApiResponse<>("User not found", e.getMessage()), HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            log.error("[Verify-code] Encountered error in AuthService");
             return new ResponseEntity<>(new ApiResponse<>("Something went wrong", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    public ResponseEntity<?> resendVerificationEmail(@Valid String email){
-        return null; //TO DO
+    @Transactional
+    public ResponseEntity<?> resendVerificationEmail(@Valid String email) {
+        User user = userRepo.findUserByEmail(email).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        try {
+            if (!user.isEnabled()) {
+                user.setVerificationCode(generateVerificationCode());
+                user.setCodeExpiresIn(LocalDateTime.now().plusMinutes(10));
+                userRepo.save(user);
+                sendVerificationEmail(user);
+                return new ResponseEntity<>(new ApiResponse<>("Verification mail resent"), HttpStatus.OK);
+            }else {
+                return new ResponseEntity<>(new ApiResponse<>("User already verified"),HttpStatus.BAD_REQUEST);
+            }
+        } catch (MessagingException e) {
+            log.error("[resend-verify-mail] Verification failed for {} {}", user.getEmail(), e.getMessage());
+            return new ResponseEntity<>(new ApiResponse<>("Failed sending verification mail"), HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            log.error("[resend-verify-mail] Encountered error in AuthService {}", e.getMessage());
+            return new ResponseEntity<>(new ApiResponse<>("Something went wrong"), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     private void sendVerificationEmail(User user) throws MessagingException {
