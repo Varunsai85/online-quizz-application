@@ -1,4 +1,10 @@
 package org.varun.onlinequizzapp.dto;
 
-public class UserResponseDto {
+import org.varun.onlinequizzapp.model.type.Role;
+
+public record UserResponseDto(
+        String username,
+        String email,
+        Role role
+) {
 }
