@@ -14,10 +14,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.varun.onlinequizzapp.dto.ApiResponse;
-import org.varun.onlinequizzapp.dto.SignInDto;
-import org.varun.onlinequizzapp.dto.SignUpDto;
-import org.varun.onlinequizzapp.dto.VerificationCodeDto;
+import org.varun.onlinequizzapp.dto.*;
 import org.varun.onlinequizzapp.model.User;
 import org.varun.onlinequizzapp.model.type.Role;
 import org.varun.onlinequizzapp.repository.UserRepository;
@@ -37,7 +34,7 @@ public class AuthService {
     private final JwtService jwtService;
 
     public ResponseEntity<?> signUp(@Valid SignUpDto signUpDto) {
-        //Check if username exists
+        //Check if a username exists
         Optional<User> userNameExistingUser = userRepo.findUserByUsername(signUpDto.username());
         if (userNameExistingUser.isPresent()) {
             return new ResponseEntity<>(new ApiResponse<>("Username not available"), HttpStatus.BAD_REQUEST);
@@ -46,7 +43,7 @@ public class AuthService {
         //Check if email exists
         Optional<User> existingUser = userRepo.findUserByEmail(signUpDto.email());
         if (existingUser.isPresent()) {
-            //Check if User is verified?
+            //Check if the User is verified?
             if (existingUser.get().isEnabled()) {
                 return new ResponseEntity<>(new ApiResponse<>("User with this email already exists"), HttpStatus.BAD_REQUEST);
             }
@@ -122,8 +119,8 @@ public class AuthService {
     }
 
     @Transactional
-    public ResponseEntity<?> resendVerificationEmail(@Valid String email) {
-        User user = userRepo.findUserByEmail(email).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    public ResponseEntity<?> resendVerificationEmail(@Valid ResendDto resendDto) {
+        User user = userRepo.findUserByEmail(resendDto.email()).orElseThrow(() -> new UsernameNotFoundException("User not found"));
         try {
             if (!user.isEnabled()) {
                 user.setVerificationCode(generateVerificationCode());

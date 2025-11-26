@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.varun.onlinequizzapp.dto.ResendDto;
 import org.varun.onlinequizzapp.dto.SignInDto;
 import org.varun.onlinequizzapp.dto.SignUpDto;
 import org.varun.onlinequizzapp.dto.VerificationCodeDto;
@@ -30,8 +31,8 @@ public class AuthController {
         return authService.verifyCode(verificationCodeDto);
     }
 
-    @GetMapping("/resend-mail")
-    public ResponseEntity<?> resendEmail(@RequestParam String email){
-        return authService.resendVerificationEmail(email);
+    @PostMapping("/resend-mail")
+    public ResponseEntity<?> resendEmail(@Valid @RequestBody ResendDto resendDto){
+        return authService.resendVerificationEmail(resendDto);
     }
 }
