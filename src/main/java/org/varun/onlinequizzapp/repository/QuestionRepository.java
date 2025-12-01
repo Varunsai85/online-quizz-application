@@ -1,4 +1,7 @@
 package org.varun.onlinequizzapp.repository;
 
-public interface QuestionRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.varun.onlinequizzapp.model.Question;
+
+public interface QuestionRepository extends JpaRepository<Question, Long> {
 }
