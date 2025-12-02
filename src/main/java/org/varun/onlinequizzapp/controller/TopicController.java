@@ -10,7 +10,7 @@ import org.varun.onlinequizzapp.service.TopicService;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("api/topic")
+@RequestMapping("api")
 public class TopicController {
     private final TopicService topicService;
 
