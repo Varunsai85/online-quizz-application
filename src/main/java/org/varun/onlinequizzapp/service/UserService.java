@@ -26,7 +26,7 @@ public class UserService implements UserDetailsService {
 
     public ResponseEntity<?> getAllUsers() {
         List<User> users = userRepo.findAll();
-        List<UserResponseDto> userResponseDtoList = users.stream().map(user -> new UserResponseDto(user.getUsername(), user.getEmail(), user.getRole(),user.isEnabled())).toList();
+        List<UserResponseDto> userResponseDtoList = users.stream().map(user -> new UserResponseDto(user.getId(),user.getUsername(), user.getEmail(), user.getRole(),user.isEnabled())).toList();
         return new ResponseEntity<>(new ApiResponse<>("Fetched all users", userResponseDtoList), HttpStatus.OK);
     }
 }
