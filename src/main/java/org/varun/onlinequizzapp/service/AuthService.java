@@ -37,7 +37,7 @@ public class AuthService {
         //Check if a username exists
         Optional<User> userNameExistingUser = userRepo.findUserByUsername(signUpDto.username());
         if (userNameExistingUser.isPresent()) {
-            return new ResponseEntity<>(new ApiResponse<>("Username not available"), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ApiResponse<>("Username not available"), HttpStatus.CONFLICT);
         }
 
         //Check if email exists
@@ -45,7 +45,7 @@ public class AuthService {
         if (existingUser.isPresent()) {
             //Check if the User is verified?
             if (existingUser.get().isEnabled()) {
-                return new ResponseEntity<>(new ApiResponse<>("User with this email already exists"), HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>(new ApiResponse<>("User with this email already exists"), HttpStatus.CONFLICT);
             }
             return new ResponseEntity<>(new ApiResponse<>("User already exists, but not verified"), HttpStatus.BAD_REQUEST);
         }
