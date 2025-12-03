@@ -15,13 +15,19 @@ public class TopicController {
     private final TopicService topicService;
 
     @GetMapping("topics")
-    public ResponseEntity<?> getTopics(){
+    public ResponseEntity<?> getTopics() {
         return topicService.getTopics();
     }
 
     @PostMapping("topic")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<?> addTopic(@Valid @RequestBody AddTopicDto input){
+    public ResponseEntity<?> addTopic(@Valid @RequestBody AddTopicDto input) {
         return topicService.addTopic(input);
+    }
+
+    @DeleteMapping("topic/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<?> deleteTopic(@PathVariable Long id, @RequestParam(required = false, defaultValue = "false") Boolean force) {
+        return topicService.deleteTopic(id, force);
     }
 }

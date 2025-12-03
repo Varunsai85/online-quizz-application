@@ -1,5 +1,6 @@
 package org.varun.onlinequizzapp.service;
 
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +14,8 @@ import org.varun.onlinequizzapp.model.Topic;
 import org.varun.onlinequizzapp.repository.TopicRepository;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -38,8 +41,29 @@ public class TopicService {
             topicRepo.save(newTopic);
             return new ResponseEntity<>(new ApiResponse<>("Topic created successfully"), HttpStatus.CREATED);
         } catch (Exception e) {
-            log.error("[Add-Topic] Error adding topic in addTopic method");
+            log.error("[Add-Topic] Error adding topic in addTopic method: {}",e.getMessage());
             return new ResponseEntity<>(new ApiResponse<>("Something went wrong", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Transactional
+    public ResponseEntity<?> deleteTopic(Long id, Boolean force) {
+        try {
+            Optional<Topic> topicOptional=topicRepo.findById(id);
+            if(topicOptional.isEmpty()){
+                return new ResponseEntity<>(new ApiResponse<>("Topic not found"),HttpStatus.NOT_FOUND);
+            }
+            Topic topic=topicOptional.get();
+            if(!topic.getQuizzes().isEmpty() && !force){
+                return new ResponseEntity<>(new ApiResponse<>("Topic has "+topic.getQuizzes().size()+" quizzes associated.", Map.of("quiz_size",topic.getQuizzes().size())),HttpStatus.CONFLICT);
+            }
+
+            topicRepo.deleteById(id);
+            String message=force?"Topic and associated quizzes are deleted":"Topic deleted successfully";
+            return new ResponseEntity<>(new ApiResponse<>(message),HttpStatus.OK);
+        }catch (Exception e){
+            log.error("[Delete-Topic] Error while deleting topic with id {}: {}",id,e.getMessage());
+            return new ResponseEntity<>(new ApiResponse<>("Something went wrong",e.getMessage()),HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }
