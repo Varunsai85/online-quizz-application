@@ -2,6 +2,7 @@ package org.varun.onlinequizzapp.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.varun.onlinequizzapp.model.type.Difficulty;
@@ -15,6 +16,7 @@ import java.util.List;
 @NoArgsConstructor
 @Entity
 @Table(name = "quizzes")
+@Builder
 public class Quiz {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -45,6 +47,7 @@ public class Quiz {
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 
     @PreUpdate
