@@ -1,10 +1,11 @@
 package org.varun.onlinequizzapp.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import org.varun.onlinequizzapp.dto.quiz.AddQuizDto;
 import org.varun.onlinequizzapp.service.QuizService;
 
 @RestController
@@ -16,5 +17,11 @@ public class QuizController {
     @GetMapping("quizzes")
     public ResponseEntity<?> getAllQuizzes(){
         return quizService.getAllQuizzes();
+    }
+
+    @PostMapping("quiz")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<?> addQuiz(@Valid @RequestBody AddQuizDto input) {
+        return quizService.addQuiz(input);
     }
 }
