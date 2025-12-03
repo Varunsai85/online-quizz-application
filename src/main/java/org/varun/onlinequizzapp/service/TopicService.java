@@ -3,7 +3,6 @@ package org.varun.onlinequizzapp.service;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -20,7 +19,6 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class TopicService {
     private final TopicRepository topicRepo;
 
@@ -31,25 +29,20 @@ public class TopicService {
     }
 
     public ResponseEntity<?> addTopic(@Valid AddTopicDto input) {
-        try {
-            if (topicRepo.existsTopicsByNameIgnoreCase(input.name().trim())) {
-                return new ResponseEntity<>(new ApiResponse<>("Topic with the name already exists"), HttpStatus.CONFLICT);
-            }
-            Topic newTopic = Topic.builder()
-                    .name(input.name().trim())
-                    .description(input.description().trim())
-                    .build();
-            topicRepo.save(newTopic);
-            return new ResponseEntity<>(new ApiResponse<>("Topic created successfully"), HttpStatus.CREATED);
-        } catch (Exception e) {
-            log.error("[Add-Topic] Error adding topic in addTopic method: {}", e.getMessage());
-            return new ResponseEntity<>(new ApiResponse<>("Something went wrong", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        if (topicRepo.existsTopicsByNameIgnoreCase(input.name().trim())) {
+            return new ResponseEntity<>(new ApiResponse<>("Topic with the name already exists"), HttpStatus.CONFLICT);
         }
+        Topic newTopic = Topic.builder()
+                .name(input.name().trim())
+                .description(input.description().trim())
+                .build();
+        topicRepo.save(newTopic);
+        return new ResponseEntity<>(new ApiResponse<>("Topic created successfully"), HttpStatus.CREATED);
     }
 
     @Transactional
     public ResponseEntity<?> deleteTopic(Long id, Boolean force) {
-        Topic topic = topicRepo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Topic with id " + id + " not found"));
+        Topic topic = topicRepo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Topic with id: " + id + " not found"));
 
         if (!topic.getQuizzes().isEmpty() && !force) {
             return new ResponseEntity<>(new ApiResponse<>("Topic has " + topic.getQuizzes().size() + " quizzes associated."), HttpStatus.CONFLICT);
@@ -61,7 +54,7 @@ public class TopicService {
     }
 
     public ResponseEntity<?> updateTopic(Long id, @Valid UpdateTopicDto input) {
-        Topic topic = topicRepo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Topic with id " + id + " not found"));
+        Topic topic = topicRepo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Topic with id: " + id + " not found"));
 
         if (input.name() == null && input.description() == null) {
             return new ResponseEntity<>(new ApiResponse<>("Nothing to update"), HttpStatus.BAD_REQUEST);
