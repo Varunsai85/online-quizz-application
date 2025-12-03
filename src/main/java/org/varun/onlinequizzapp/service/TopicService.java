@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import org.varun.onlinequizzapp.dto.topic.AddTopicDto;
 import org.varun.onlinequizzapp.dto.ApiResponse;
 import org.varun.onlinequizzapp.dto.topic.TopicResponseDto;
@@ -15,7 +16,6 @@ import org.varun.onlinequizzapp.model.Topic;
 import org.varun.onlinequizzapp.repository.TopicRepository;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -49,55 +49,38 @@ public class TopicService {
 
     @Transactional
     public ResponseEntity<?> deleteTopic(Long id, Boolean force) {
-        try {
-            Optional<Topic> topicOptional = topicRepo.findById(id);
-            if (topicOptional.isEmpty()) {
-                return new ResponseEntity<>(new ApiResponse<>("Topic not found"), HttpStatus.NOT_FOUND);
-            }
-            Topic topic = topicOptional.get();
-            if (!topic.getQuizzes().isEmpty() && !force) {
-                return new ResponseEntity<>(new ApiResponse<>("Topic has " + topic.getQuizzes().size() + " quizzes associated.", Map.of("quiz_size", topic.getQuizzes().size())), HttpStatus.CONFLICT);
-            }
+        Topic topic = topicRepo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Topic with id " + id + " not found"));
 
-            topicRepo.deleteById(id);
-            String message = force ? "Topic and associated quizzes are deleted" : "Topic deleted successfully";
-            return new ResponseEntity<>(new ApiResponse<>(message), HttpStatus.OK);
-        } catch (Exception e) {
-            log.error("[Delete-Topic] Error while deleting topic with id {}: {}", id, e.getMessage());
-            return new ResponseEntity<>(new ApiResponse<>("Something went wrong", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        if (!topic.getQuizzes().isEmpty() && !force) {
+            return new ResponseEntity<>(new ApiResponse<>("Topic has " + topic.getQuizzes().size() + " quizzes associated."), HttpStatus.CONFLICT);
         }
+
+        topicRepo.deleteById(id);
+        String message = force ? "Topic and associated quizzes are deleted" : "Topic deleted successfully";
+        return new ResponseEntity<>(new ApiResponse<>(message), HttpStatus.OK);
     }
 
     public ResponseEntity<?> updateTopic(Long id, @Valid UpdateTopicDto input) {
-        try {
-            Optional<Topic> optionalTopic = topicRepo.findById(id);
-            if (optionalTopic.isEmpty()) {
-                return new ResponseEntity<>(new ApiResponse<>("Topic not Found"), HttpStatus.NOT_FOUND);
-            }
-            Topic topic = optionalTopic.get();
+        Topic topic = topicRepo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Topic with id " + id + " not found"));
 
-            if (input.name() == null && input.description() == null) {
-                return new ResponseEntity<>(new ApiResponse<>("Nothing to update"), HttpStatus.BAD_REQUEST);
-            }
-
-            if (input.name() != null && !input.name().trim().isEmpty()) {
-                String newName = input.name().trim();
-                Optional<Topic> existingName = topicRepo.findByName(newName);
-                if (existingName.isPresent() && !existingName.get().getId().equals(id)) {
-                    return new ResponseEntity<>(new ApiResponse<>("Topic with this name already exists"), HttpStatus.CONFLICT);
-                }
-                topic.setName(newName);
-            }
-
-            if (input.description() != null) {
-                topic.setDescription(input.description().trim());
-            }
-
-            Topic updatedTopic = topicRepo.save(topic);
-            return new ResponseEntity<>(new ApiResponse<>("Topic updated successfully", updatedTopic), HttpStatus.OK);
-        } catch (Exception e) {
-            log.error("[Update-Topic] Error while updating topic with id {}: {}", id, e.getMessage());
-            return new ResponseEntity<>(new ApiResponse<>("Something went wrong", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        if (input.name() == null && input.description() == null) {
+            return new ResponseEntity<>(new ApiResponse<>("Nothing to update"), HttpStatus.BAD_REQUEST);
         }
+
+        if (input.name() != null && !input.name().trim().isEmpty()) {
+            String newName = input.name().trim();
+            Optional<Topic> existingName = topicRepo.findByName(newName);
+            if (existingName.isPresent() && !existingName.get().getId().equals(id)) {
+                return new ResponseEntity<>(new ApiResponse<>("Topic with this name already exists"), HttpStatus.CONFLICT);
+            }
+            topic.setName(newName);
+        }
+
+        if (input.description() != null) {
+            topic.setDescription(input.description().trim());
+        }
+
+        Topic updatedTopic = topicRepo.save(topic);
+        return new ResponseEntity<>(new ApiResponse<>("Topic updated successfully", updatedTopic), HttpStatus.OK);
     }
 }

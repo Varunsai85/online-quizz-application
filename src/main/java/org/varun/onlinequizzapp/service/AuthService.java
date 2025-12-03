@@ -1,7 +1,6 @@
 package org.varun.onlinequizzapp.service;
 
 import jakarta.mail.MessagingException;
-import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +13,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import org.varun.onlinequizzapp.dto.*;
 import org.varun.onlinequizzapp.dto.auth.ResendDto;
 import org.varun.onlinequizzapp.dto.auth.SignInDto;
@@ -49,9 +50,9 @@ public class AuthService {
         if (existingUser.isPresent()) {
             //Check if the User is verified?
             if (existingUser.get().isEnabled()) {
-                return new ResponseEntity<>(new ApiResponse<>("User with this email already exists"), HttpStatus.CONFLICT);
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "User with this email already exists");
             }
-            return new ResponseEntity<>(new ApiResponse<>("User already exists, but not verified"), HttpStatus.BAD_REQUEST);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User already exists, but not verified");
         }
         User newUser = User.builder()
                 .username(signUpDto.username())
@@ -69,9 +70,6 @@ public class AuthService {
         } catch (MessagingException e) {
             log.error("[Sign-up] Verification failed for {} {}", newUser.getEmail(), e.getMessage());
             return new ResponseEntity<>(new ApiResponse<>("Failed to send verification email"), HttpStatus.INTERNAL_SERVER_ERROR);
-        } catch (Exception e) {
-            log.error("[Sign-up] Encountered error in AuthService {}", e.getMessage());
-            return new ResponseEntity<>(new ApiResponse<>("Something went wrong"), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -90,9 +88,6 @@ public class AuthService {
         } catch (BadCredentialsException e) {
             log.error("[Sign-in] Wrong credentials for user {}", signInDto.login());
             return new ResponseEntity<>(new ApiResponse<>("Invalid credentials", e.getMessage()), HttpStatus.UNAUTHORIZED);
-        } catch (Exception e) {
-            log.error("[Sign-in] Encountered error in AuthService");
-            return new ResponseEntity<>(new ApiResponse<>("Something went wrong", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -116,9 +111,6 @@ public class AuthService {
         } catch (UsernameNotFoundException e) {
             log.error("[Verify-code] User {}, not found", verificationCodeDto.email());
             return new ResponseEntity<>(new ApiResponse<>("User not found", e.getMessage()), HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            log.error("[Verify-code] Encountered error in AuthService");
-            return new ResponseEntity<>(new ApiResponse<>("Something went wrong", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -138,9 +130,6 @@ public class AuthService {
         } catch (MessagingException e) {
             log.error("[resend-verify-mail] Verification failed for {} {}", user.getEmail(), e.getMessage());
             return new ResponseEntity<>(new ApiResponse<>("Failed sending verification mail"), HttpStatus.BAD_REQUEST);
-        } catch (Exception e) {
-            log.error("[resend-verify-mail] Encountered error in AuthService {}", e.getMessage());
-            return new ResponseEntity<>(new ApiResponse<>("Something went wrong"), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
