@@ -7,9 +7,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.varun.onlinequizzapp.dto.AddTopicDto;
+import org.varun.onlinequizzapp.dto.topic.AddTopicDto;
 import org.varun.onlinequizzapp.dto.ApiResponse;
-import org.varun.onlinequizzapp.dto.TopicResponseDto;
+import org.varun.onlinequizzapp.dto.topic.TopicResponseDto;
 import org.varun.onlinequizzapp.model.Topic;
 import org.varun.onlinequizzapp.repository.TopicRepository;
 
@@ -31,12 +31,12 @@ public class TopicService {
 
     public ResponseEntity<?> addTopic(@Valid AddTopicDto input) {
         try {
-            if (topicRepo.existsTopicsByNameIgnoreCase(input.name())) {
+            if (topicRepo.existsTopicsByNameIgnoreCase(input.name().trim())) {
                 return new ResponseEntity<>(new ApiResponse<>("Topic with the name already exists"), HttpStatus.CONFLICT);
             }
             Topic newTopic = Topic.builder()
-                    .name(input.name())
-                    .description(input.description())
+                    .name(input.name().trim())
+                    .description(input.description().trim())
                     .build();
             topicRepo.save(newTopic);
             return new ResponseEntity<>(new ApiResponse<>("Topic created successfully"), HttpStatus.CREATED);
