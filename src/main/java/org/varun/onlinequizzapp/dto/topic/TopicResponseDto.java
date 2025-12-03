@@ -1,4 +1,4 @@
-package org.varun.onlinequizzapp.dto;
+package org.varun.onlinequizzapp.dto.topic;
 
 public record TopicResponseDto(
         Long id,

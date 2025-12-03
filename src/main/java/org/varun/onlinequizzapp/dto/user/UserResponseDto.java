@@ -1,4 +1,4 @@
-package org.varun.onlinequizzapp.dto;
+package org.varun.onlinequizzapp.dto.user;
 
 import org.varun.onlinequizzapp.model.type.Role;
 

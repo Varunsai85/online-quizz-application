@@ -1,4 +1,4 @@
-package org.varun.onlinequizzapp.dto;
+package org.varun.onlinequizzapp.dto.auth;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;

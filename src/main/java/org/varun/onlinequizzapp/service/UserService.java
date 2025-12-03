@@ -8,7 +8,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.varun.onlinequizzapp.dto.ApiResponse;
-import org.varun.onlinequizzapp.dto.UserResponseDto;
+import org.varun.onlinequizzapp.dto.user.UserResponseDto;
 import org.varun.onlinequizzapp.model.User;
 import org.varun.onlinequizzapp.repository.UserRepository;
 

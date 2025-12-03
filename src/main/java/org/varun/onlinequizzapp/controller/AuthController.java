@@ -4,10 +4,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.varun.onlinequizzapp.dto.ResendDto;
-import org.varun.onlinequizzapp.dto.SignInDto;
-import org.varun.onlinequizzapp.dto.SignUpDto;
-import org.varun.onlinequizzapp.dto.VerificationCodeDto;
+import org.varun.onlinequizzapp.dto.auth.ResendDto;
+import org.varun.onlinequizzapp.dto.auth.SignInDto;
+import org.varun.onlinequizzapp.dto.auth.SignUpDto;
+import org.varun.onlinequizzapp.dto.auth.VerificationCodeDto;
 import org.varun.onlinequizzapp.service.AuthService;
 
 @RestController
