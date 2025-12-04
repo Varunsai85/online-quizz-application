@@ -99,7 +99,7 @@ public class QuizService {
                 quiz.getDifficultyLevel(),
                 quiz.getCreatedAt(),
                 quiz.getUpdatedAt());
-        log.info("[Get-quiz] Fetch quiz with id {}, successfully",id);
+        log.info("[Get-quiz] Quiz with id {}, fetched successfully",id);
         return new ResponseEntity<>(new ApiResponse<>("Quiz fetched successfully",response),HttpStatus.OK);
     }
 }
