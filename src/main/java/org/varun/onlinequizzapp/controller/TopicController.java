@@ -20,6 +20,11 @@ public class TopicController {
         return topicService.getTopics();
     }
 
+    @GetMapping("topic/{id}")
+    public ResponseEntity<?> getTopicWithId(@PathVariable Long id){
+        return topicService.getTopicWithId(id);
+    }
+
     @PostMapping("topic")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<?> addTopic(@Valid @RequestBody AddTopicDto input) {

@@ -82,4 +82,15 @@ public class TopicService {
         log.info("[Update_Topic] Topic with id {}, updated successfully",id);
         return new ResponseEntity<>(new ApiResponse<>("Topic updated successfully", updatedTopic), HttpStatus.OK);
     }
+
+    public ResponseEntity<?> getTopicWithId(Long id) {
+        Topic topic=topicRepo.findById(id).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Topic not found"));
+        TopicResponseDto response=new TopicResponseDto(
+                topic.getId(),
+                topic.getName(),
+                topic.getDescription()
+        );
+        log.info("[Get-Topic] Topic with id {}, fetched successfully",id);
+        return new ResponseEntity<>(new ApiResponse<>("Topic fetched successfully",response),HttpStatus.OK);
+    }
 }
