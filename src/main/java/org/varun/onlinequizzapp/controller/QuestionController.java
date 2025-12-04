@@ -21,7 +21,7 @@ public class QuestionController {
     }
 
     @GetMapping("get/{id}")
-    public ResponseEntity<?> getQuestionWIthId(@PathVariable Long id){
+    public ResponseEntity<?> getQuestionWIthId(@PathVariable Long id) {
         return questionService.getQuestionWithId(id);
     }
 
@@ -35,5 +35,10 @@ public class QuestionController {
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<?> updateQuestion(@PathVariable Long id, @Valid @RequestBody UpdateQuestionDto input) {
         return questionService.updateQuestion(id, input);
+    }
+
+    @DeleteMapping("delete/{id}")
+    public ResponseEntity<?> deleteQuestion(@PathVariable Long id) {
+        return questionService.deleteQuestion(id);
     }
 }

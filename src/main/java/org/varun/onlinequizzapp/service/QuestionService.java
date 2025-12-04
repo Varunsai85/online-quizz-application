@@ -36,15 +36,15 @@ public class QuestionService {
     public ResponseEntity<?> getAllQuestions() {
         List<Question> questions = questionRepo.findAll();
         List<QuestionResponseDto> responses = questions.stream().map(question -> new QuestionResponseDto(question.getId(),
-                        question.getTitle(),
-                        question.getQuiz().getId(),
-                        question.getOrderNumber(),
-                        question.getQuestionOptions()
-                                .stream()
-                                .map(option -> new OptionResponseDto(option.getId(),
-                                        option.getOptionText(),
-                                        option.getIsCorrect()))
-                                .toList())).toList();
+                question.getTitle(),
+                question.getQuiz().getId(),
+                question.getOrderNumber(),
+                question.getQuestionOptions()
+                        .stream()
+                        .map(option -> new OptionResponseDto(option.getId(),
+                                option.getOptionText(),
+                                option.getIsCorrect()))
+                        .toList())).toList();
         return new ResponseEntity<>(new ApiResponse<>("All questions fetched successfully", responses), HttpStatus.OK);
     }
 
@@ -99,13 +99,13 @@ public class QuestionService {
         question.setTitle(newTitle);
         question.setOrderNumber(input.order());
         questionRepo.save(question);
-        log.info("[Update-Question] Question with id {}, updated successfully",id);
-        return new ResponseEntity<>(new ApiResponse<>("Question Updated successfully"),HttpStatus.OK);
+        log.info("[Update-Question] Question with id {}, updated successfully", id);
+        return new ResponseEntity<>(new ApiResponse<>("Question Updated successfully"), HttpStatus.OK);
     }
 
     public ResponseEntity<?> getQuestionWithId(Long id) {
-        Question question=questionRepo.findById(id).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Question not found"));
-        QuestionResponseDto response =new QuestionResponseDto(
+        Question question = questionRepo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found"));
+        QuestionResponseDto response = new QuestionResponseDto(
                 question.getId(),
                 question.getTitle(),
                 question.getQuiz().getId(),
@@ -116,7 +116,14 @@ public class QuestionService {
                         option.getIsCorrect()
                 )).toList()
         );
-        log.info("[Get-Question] Quiz with id {}, fetched successfully",id);
-        return new ResponseEntity<>(new ApiResponse<>("Question fetched successfully",response),HttpStatus.OK);
+        log.info("[Get-Question] Quiz with id {}, fetched successfully", id);
+        return new ResponseEntity<>(new ApiResponse<>("Question fetched successfully", response), HttpStatus.OK);
+    }
+
+    public ResponseEntity<?> deleteQuestion(Long id) {
+        Question question = questionRepo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question with id " + id + " not found"));
+        questionRepo.delete(question);
+        log.info("[Delete-Question] Question with id {}, deleted successfully", id);
+        return new ResponseEntity<>(new ApiResponse<>("Question deleted successfully"), HttpStatus.OK);
     }
 }
