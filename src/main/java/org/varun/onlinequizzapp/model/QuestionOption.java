@@ -2,6 +2,7 @@ package org.varun.onlinequizzapp.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -10,6 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Entity
 @Table(name = "options")
+@Builder
 public class QuestionOption {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -17,7 +19,7 @@ public class QuestionOption {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_id", nullable = false)
     private Question question;
-    @Column(nullable = false, length = 500)
+    @Column(nullable = false, length = 100)
     private String optionText;
     @Column(nullable = false)
     private Boolean isCorrect = false;
