@@ -20,6 +20,11 @@ public class QuestionController {
         return questionService.getAllQuestions();
     }
 
+    @GetMapping("get/{id}")
+    public ResponseEntity<?> getQuestionWIthId(@PathVariable Long id){
+        return questionService.getQuestionWithId(id);
+    }
+
     @PostMapping("add")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<?> addQuestion(@Valid @RequestBody AddQuestionDto input) {

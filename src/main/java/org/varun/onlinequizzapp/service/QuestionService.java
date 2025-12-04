@@ -102,4 +102,21 @@ public class QuestionService {
         log.info("[Update-Question] Question with id {}, updated successfully",id);
         return new ResponseEntity<>(new ApiResponse<>("Question Updated successfully"),HttpStatus.OK);
     }
+
+    public ResponseEntity<?> getQuestionWithId(Long id) {
+        Question question=questionRepo.findById(id).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Question not found"));
+        QuestionResponseDto response =new QuestionResponseDto(
+                question.getId(),
+                question.getTitle(),
+                question.getQuiz().getId(),
+                question.getOrderNumber(),
+                question.getQuestionOptions().stream().map(option -> new OptionResponseDto(
+                        option.getId(),
+                        option.getOptionText(),
+                        option.getIsCorrect()
+                )).toList()
+        );
+        log.info("[Get-Question] Quiz with id {}, fetched successfully",id);
+        return new ResponseEntity<>(new ApiResponse<>("Question fetched successfully",response),HttpStatus.OK);
+    }
 }
