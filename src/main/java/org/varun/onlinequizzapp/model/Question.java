@@ -2,6 +2,7 @@ package org.varun.onlinequizzapp.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -13,6 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @Entity
 @Table(name = "questions")
+@Builder
 public class Question {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,4 +30,9 @@ public class Question {
     private List<QuestionOption> questionOptions = new ArrayList<>();
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserAnswer> userAnswers = new ArrayList<>();
+
+    private void addOption(QuestionOption option){
+        questionOptions.add(option);
+        option.setQuestion(this);
+    }
 }
