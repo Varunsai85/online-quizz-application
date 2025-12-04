@@ -3,6 +3,7 @@ package org.varun.onlinequizzapp.dto.question;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import org.varun.onlinequizzapp.dto.option.AddOptionDto;
 
 import java.util.List;
 

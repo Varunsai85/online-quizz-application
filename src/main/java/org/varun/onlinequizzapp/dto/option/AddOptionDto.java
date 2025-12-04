@@ -1,4 +1,4 @@
-package org.varun.onlinequizzapp.dto.question;
+package org.varun.onlinequizzapp.dto.option;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
