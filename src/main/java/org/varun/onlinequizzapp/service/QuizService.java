@@ -89,6 +89,7 @@ public class QuizService {
         return new ResponseEntity<>(new ApiResponse<>("Quiz has been Updated"),HttpStatus.OK);
     }
 
+    @Transactional
     public ResponseEntity<?> getQuizWithId(Long id) {
         Quiz quiz=quizRepo.findById(id).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Quiz not found"));
         QuizResponseDto response=new QuizResponseDto(quiz.getId(),

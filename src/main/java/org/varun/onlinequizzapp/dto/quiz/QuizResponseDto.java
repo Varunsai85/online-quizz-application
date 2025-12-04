@@ -9,7 +9,7 @@ public record QuizResponseDto(
         String title,
         String description,
         String topicName,
-        Integer timeLimit,
+        Integer timeLimitInMinutes,
         Difficulty difficulty,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
