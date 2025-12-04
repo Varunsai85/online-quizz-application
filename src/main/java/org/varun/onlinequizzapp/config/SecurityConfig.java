@@ -30,7 +30,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(request->request.requestMatchers("/api/auth/**","/api/topic/topics","/api/topic/get/{}","/api/quiz/quizzes","/api/quiz/get/{}","/api/question/questions").permitAll().anyRequest().authenticated())
+                .authorizeHttpRequests(request->request.requestMatchers("/api/auth/**","/api/topic/topics","/api/topic/get/{}","/api/quiz/quizzes","/api/quiz/get/{}","/api/question/questions","/api/question/get/{}").permitAll().anyRequest().authenticated())
                 .sessionManagement(session->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(exception->exception.accessDeniedHandler(accessDeniedExceptionHandler))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
