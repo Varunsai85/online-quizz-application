@@ -20,6 +20,11 @@ public class QuizController {
         return quizService.getAllQuizzes();
     }
 
+    @GetMapping("quiz/{id}")
+    public ResponseEntity<?> getQuizWithId(@PathVariable Long id){
+        return quizService.getQuizWithId(id);
+    }
+
     @PostMapping("quiz")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<?> addQuiz(@Valid @RequestBody AddQuizDto input) {

@@ -11,6 +11,7 @@ public record QuizResponseDto(
         String topicName,
         Integer timeLimit,
         Difficulty difficulty,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt
 ) {
 }

@@ -35,7 +35,8 @@ public class QuizService {
                 quiz.getTopic().getName(),
                 quiz.getTimeLimitMinutes(),
                 quiz.getDifficultyLevel(),
-                quiz.getCreatedAt())).toList();
+                quiz.getCreatedAt(),
+                quiz.getUpdatedAt())).toList();
         log.info("[Get-Quizzes] All quizzes fetched successfully");
         return new ResponseEntity<>(new ApiResponse<>("All quizzes fetched successfully", responses), HttpStatus.OK);
     }
@@ -86,5 +87,19 @@ public class QuizService {
         quizRepo.save(quiz);
         log.info("[Update-Quiz] Quiz with id {}, updated successfully",id);
         return new ResponseEntity<>(new ApiResponse<>("Quiz has been Updated"),HttpStatus.OK);
+    }
+
+    public ResponseEntity<?> getQuizWithId(Long id) {
+        Quiz quiz=quizRepo.findById(id).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Quiz not found"));
+        QuizResponseDto response=new QuizResponseDto(quiz.getId(),
+                quiz.getTitle(),
+                quiz.getDescription(),
+                quiz.getTopic().getName(),
+                quiz.getTimeLimitMinutes(),
+                quiz.getDifficultyLevel(),
+                quiz.getCreatedAt(),
+                quiz.getUpdatedAt());
+        log.info("[Get-quiz] Fetch quiz with id {}, successfully",id);
+        return new ResponseEntity<>(new ApiResponse<>("Quiz fetched successfully",response),HttpStatus.OK);
     }
 }
