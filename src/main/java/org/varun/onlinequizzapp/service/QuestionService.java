@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import org.varun.onlinequizzapp.dto.ApiResponse;
 import org.varun.onlinequizzapp.dto.option.AddOptionDto;
+import org.varun.onlinequizzapp.dto.option.UpdateOptionDto;
 import org.varun.onlinequizzapp.dto.question.AddQuestionDto;
 import org.varun.onlinequizzapp.dto.option.OptionResponseDto;
 import org.varun.onlinequizzapp.dto.question.QuestionResponseDto;
@@ -17,6 +18,7 @@ import org.varun.onlinequizzapp.dto.question.UpdateQuestionDto;
 import org.varun.onlinequizzapp.model.Question;
 import org.varun.onlinequizzapp.model.QuestionOption;
 import org.varun.onlinequizzapp.model.Quiz;
+import org.varun.onlinequizzapp.repository.QuestionOptionRepository;
 import org.varun.onlinequizzapp.repository.QuestionRepository;
 import org.varun.onlinequizzapp.repository.QuizRepository;
 
@@ -31,6 +33,7 @@ import java.util.Set;
 public class QuestionService {
     private final QuestionRepository questionRepo;
     private final QuizRepository quizRepo;
+    private final QuestionOptionRepository optionRepo;
 
     @Transactional
     public ResponseEntity<?> getAllQuestions() {
@@ -48,9 +51,10 @@ public class QuestionService {
         return new ResponseEntity<>(new ApiResponse<>("All questions fetched successfully", responses), HttpStatus.OK);
     }
 
+    @Transactional
     public ResponseEntity<?> addQuestion(@Valid AddQuestionDto input) {
         Quiz quiz = quizRepo.findById(input.quizId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Quiz with id: " + input.quizId() + " not found"));
-        if (questionRepo.existsQuestionByTitleIgnoreCase(input.title())) {
+        if (questionRepo.existsQuestionByTitleIgnoreCase(input.title().trim())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Quiz with the title already exists");
         }
 
@@ -121,9 +125,73 @@ public class QuestionService {
     }
 
     public ResponseEntity<?> deleteQuestion(Long id) {
-        Question question = questionRepo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question with id " + id + " not found"));
+        Question question = questionRepo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question with id: " + id + " not found"));
         questionRepo.delete(question);
         log.info("[Delete-Question] Question with id {}, deleted successfully", id);
         return new ResponseEntity<>(new ApiResponse<>("Question deleted successfully"), HttpStatus.OK);
+    }
+
+    @Transactional
+    public ResponseEntity<?> addOption(Long id, @Valid AddOptionDto input) {
+        Question question = questionRepo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question with id: " + id + " not found"));
+        if (input.isCorrect()) {
+            int count = (int) question.getQuestionOptions().stream().filter(QuestionOption::getIsCorrect).count();
+            if (count == 1) {
+                log.warn("[Add-Option] Question with id {}, already has a correct option", id);
+                return new ResponseEntity<>(new ApiResponse<>("Question already has a correct option"), HttpStatus.CONFLICT);
+            }
+        }
+        Optional<QuestionOption> existingOption = optionRepo.findByOptionTextIgnoreCase(input.optionText().trim());
+        if (existingOption.isPresent() && existingOption.get().getQuestion().getId().equals(id)) {
+            log.warn("[Add-Option] Option already exists in the question with id {}", id);
+            return new ResponseEntity<>(new ApiResponse<>("Option already exist"), HttpStatus.CONFLICT);
+        }
+        QuestionOption newOption = QuestionOption.builder()
+                .optionText(input.optionText().trim())
+                .isCorrect(input.isCorrect())
+                .question(question)
+                .build();
+        optionRepo.save(newOption);
+        log.info("[Add-Option] Option added to the question with id {}", id);
+        return new ResponseEntity<>(new ApiResponse<>("Option created successfully"), HttpStatus.CREATED);
+    }
+
+    @Transactional
+    public ResponseEntity<?> updateOption(Long id, @Valid UpdateOptionDto input) {
+        QuestionOption option = optionRepo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Option with id: " + id + " not found"));
+        Optional<QuestionOption> existingOption = optionRepo.findByOptionTextIgnoreCase(input.optionText().trim());
+
+        if (existingOption.isPresent() && !existingOption.get().getId().equals(option.getId()) && existingOption.get().getQuestion().getId().equals(option.getQuestion().getId())) {
+            log.warn("[Update-Option] Option with id {}, already exists with the name", id);
+            return new ResponseEntity<>(new ApiResponse<>("Option already exists with the text"), HttpStatus.CONFLICT);
+        }
+
+        if (option.getIsCorrect() && !input.isCorrect()) {
+            int correctOptionsCount = (int) option.getQuestion().getQuestionOptions().stream().filter(QuestionOption::getIsCorrect).count();
+            if (correctOptionsCount <= 1) {
+                log.warn("[Update-Option] Option with id {}, cannot be updated as incorrect, must choose another option as correct to make this incorrect", id);
+                return new ResponseEntity<>(new ApiResponse<>("Cannot mark this option as incorrect. At least ot option must be marked correct"), HttpStatus.BAD_REQUEST);
+            }
+        }
+        option.setOptionText(input.optionText().trim());
+        option.setIsCorrect(input.isCorrect());
+        log.info("[Update-Option] Option with id {}, updated successfully", id);
+        return new ResponseEntity<>(new ApiResponse<>("Option Updated Successfully"), HttpStatus.OK);
+    }
+
+    @Transactional
+    public ResponseEntity<?> deleteOption(Long id) {
+        QuestionOption option = optionRepo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Option with id: " + id + " not found"));
+
+        if (option.getIsCorrect()) {
+            int correctOptionCount = (int) option.getQuestion().getQuestionOptions().stream().filter(QuestionOption::getIsCorrect).count();
+            if (correctOptionCount <= 1) {
+                log.warn("[Delete-Option] Option with id {}, cannot delete the option because it is only correct option", id);
+                return new ResponseEntity<>(new ApiResponse<>("Cannot delete this option because it it the only correct option"), HttpStatus.BAD_REQUEST);
+            }
+        }
+        optionRepo.delete(option);
+        log.info("[Delete-Option] Option with id {}, deleted successfully", id);
+        return new ResponseEntity<>(new ApiResponse<>("Option deleted successfully"), HttpStatus.OK);
     }
 }
