@@ -11,7 +11,7 @@ import org.varun.onlinequizzapp.service.QuestionService;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("api")
+@RequestMapping("api/question")
 public class QuestionController {
     private final QuestionService questionService;
 
@@ -20,13 +20,13 @@ public class QuestionController {
         return questionService.getAllQuestions();
     }
 
-    @PostMapping("question")
+    @PostMapping("add")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<?> addQuestion(@Valid @RequestBody AddQuestionDto input) {
         return questionService.addQuestion(input);
     }
 
-    @PatchMapping("question/{id}")
+    @PatchMapping("update/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<?> updateQuestion(@PathVariable Long id, @Valid @RequestBody UpdateQuestionDto input) {
         return questionService.updateQuestion(id, input);

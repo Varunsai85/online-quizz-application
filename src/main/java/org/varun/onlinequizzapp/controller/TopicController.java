@@ -11,7 +11,7 @@ import org.varun.onlinequizzapp.service.TopicService;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("api")
+@RequestMapping("api/topic")
 public class TopicController {
     private final TopicService topicService;
 
@@ -20,24 +20,24 @@ public class TopicController {
         return topicService.getTopics();
     }
 
-    @GetMapping("topic/{id}")
+    @GetMapping("get/{id}")
     public ResponseEntity<?> getTopicWithId(@PathVariable Long id){
         return topicService.getTopicWithId(id);
     }
 
-    @PostMapping("topic")
+    @PostMapping("add")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<?> addTopic(@Valid @RequestBody AddTopicDto input) {
         return topicService.addTopic(input);
     }
 
-    @DeleteMapping("topic/{id}")
+    @DeleteMapping("delete/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<?> deleteTopic(@PathVariable Long id, @RequestParam(required = false, defaultValue = "false") Boolean force) {
         return topicService.deleteTopic(id, force);
     }
 
-    @PatchMapping("topic/{id}")
+    @PatchMapping("update/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<?> updateTopic(@PathVariable Long id, @Valid @RequestBody UpdateTopicDto input) {
         return topicService.updateTopic(id, input);

@@ -10,7 +10,7 @@ import org.varun.onlinequizzapp.dto.quiz.UpdateQuizDto;
 import org.varun.onlinequizzapp.service.QuizService;
 
 @RestController
-@RequestMapping("api")
+@RequestMapping("api/quiz")
 @RequiredArgsConstructor
 public class QuizController {
     private final QuizService quizService;
@@ -20,24 +20,24 @@ public class QuizController {
         return quizService.getAllQuizzes();
     }
 
-    @GetMapping("quiz/{id}")
+    @GetMapping("get/{id}")
     public ResponseEntity<?> getQuizWithId(@PathVariable Long id){
         return quizService.getQuizWithId(id);
     }
 
-    @PostMapping("quiz")
+    @PostMapping("add")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<?> addQuiz(@Valid @RequestBody AddQuizDto input) {
         return quizService.addQuiz(input);
     }
 
-    @DeleteMapping("quiz/{id}")
+    @DeleteMapping("delete/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<?> deleteQuiz(@PathVariable Long id){
         return quizService.deleteQuiz(id);
     }
 
-    @PatchMapping("quiz/{id}")
+    @PatchMapping("update/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<?> updateQuiz(@PathVariable Long id, @Valid @RequestBody UpdateQuizDto input){
         return quizService.updateQuiz(id,input);
