@@ -40,13 +40,13 @@ public class AuthService {
 
     public ResponseEntity<?> signUp(@Valid SignUpDto signUpDto) {
         //Check if a username exists
-        Optional<User> userNameExistingUser = userRepo.findUserByUsername(signUpDto.username());
+        Optional<User> userNameExistingUser = userRepo.findUserByUsername(signUpDto.username().toLowerCase());
         if (userNameExistingUser.isPresent()) {
             return new ResponseEntity<>(new ApiResponse<>("Username not available"), HttpStatus.CONFLICT);
         }
 
         //Check if email exists
-        Optional<User> existingUser = userRepo.findUserByEmail(signUpDto.email());
+        Optional<User> existingUser = userRepo.findUserByEmail(signUpDto.email().toLowerCase());
         if (existingUser.isPresent()) {
             //Check if the User is verified?
             if (existingUser.get().isEnabled()) {
@@ -55,8 +55,8 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User already exists, but not verified");
         }
         User newUser = User.builder()
-                .username(signUpDto.username())
-                .email(signUpDto.email())
+                .username(signUpDto.username().toLowerCase().trim())
+                .email(signUpDto.email().toLowerCase().trim())
                 .password(encoder.encode(signUpDto.password()))
                 .isEnabled(false)
                 .verificationCode(generateVerificationCode())
