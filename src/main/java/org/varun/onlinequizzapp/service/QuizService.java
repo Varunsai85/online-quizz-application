@@ -2,6 +2,7 @@ package org.varun.onlinequizzapp.service;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class QuizService {
     private final QuizRepository quizRepo;
     private final TopicRepository topicRepo;
@@ -34,6 +36,7 @@ public class QuizService {
                 quiz.getTimeLimitMinutes(),
                 quiz.getDifficultyLevel(),
                 quiz.getCreatedAt())).toList();
+        log.info("[Get-Quizzes] All quizzes fetched successfully");
         return new ResponseEntity<>(new ApiResponse<>("All quizzes fetched successfully", responses), HttpStatus.OK);
     }
 
@@ -50,6 +53,7 @@ public class QuizService {
                 .difficultyLevel(input.difficulty())
                 .build();
         quizRepo.saveAndFlush(newQuiz);
+        log.info("[Add-Quiz] Quiz created successfully");
         return new ResponseEntity<>(new ApiResponse<>("Quiz created successfully"), HttpStatus.CREATED);
 
     }
@@ -57,6 +61,7 @@ public class QuizService {
     public ResponseEntity<?> deleteQuiz(Long id) {
         Quiz quiz=quizRepo.findById(id).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Quiz with id: "+id+" not found"));
         quizRepo.delete(quiz);
+        log.info("[Delete-Quiz] Quiz with id {}, deleted successfully",id);
         return new ResponseEntity<>(new ApiResponse<>("Quiz with id: "+id+" deleted successfully"),HttpStatus.OK);
     }
 
@@ -79,6 +84,7 @@ public class QuizService {
             quiz.setDifficultyLevel(input.difficulty());
         }
         quizRepo.save(quiz);
+        log.info("[Update-Quiz] Quiz with id {}, updated successfully",id);
         return new ResponseEntity<>(new ApiResponse<>("Quiz has been Updated"),HttpStatus.OK);
     }
 }

@@ -66,9 +66,10 @@ public class AuthService {
         try {
             userRepo.save(newUser);
             sendVerificationEmail(newUser);
+            log.info("[Sign-up] User {} signedUp successfully",newUser.getEmail());
             return new ResponseEntity<>(new ApiResponse<>("User registered successfully, Please verify your account"), HttpStatus.CREATED);
         } catch (MessagingException e) {
-            log.error("[Sign-up] Verification failed for {} {}", newUser.getEmail(), e.getMessage());
+            log.error("[Sign-up] Verification mail failed for {} {}", newUser.getEmail(), e.getMessage());
             return new ResponseEntity<>(new ApiResponse<>("Failed to send verification email"), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -78,6 +79,7 @@ public class AuthService {
             User user = userRepo.findByUsernameOrEmail(signInDto.login(), signInDto.login()).orElseThrow(() -> new UsernameNotFoundException("User not found"));
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(signInDto.login(), signInDto.password()));
             String jwtToken = jwtService.generateJwtToken(user.getEmail());
+            log.info("[Sign-in] User {} logged successfully",signInDto.login());
             return new ResponseEntity<>(new ApiResponse<>("User logged in successfully", jwtToken), HttpStatus.OK);
         } catch (UsernameNotFoundException e) {
             log.error("[Sign-in] User {} not found", signInDto.login());
@@ -104,8 +106,10 @@ public class AuthService {
                 user.setVerificationCode(null);
                 user.setEnabled(true);
                 userRepo.save(user);
+                log.info("[Verify-code] Email verification for user {} is processed successfully",verificationCodeDto.email());
                 return new ResponseEntity<>(new ApiResponse<>("User verified successfully"), HttpStatus.OK);
             } else {
+                log.warn("[Verify-code] Wrong verification code from user {}",verificationCodeDto.email());
                 return new ResponseEntity<>(new ApiResponse<>("Invalid verification code"), HttpStatus.UNAUTHORIZED);
             }
         } catch (UsernameNotFoundException e) {
@@ -123,8 +127,10 @@ public class AuthService {
                 user.setCodeExpiresIn(LocalDateTime.now().plusMinutes(10));
                 userRepo.save(user);
                 sendVerificationEmail(user);
+                log.info("[resend-verify-mail] Verification mail resent for user {}",resendDto.email());
                 return new ResponseEntity<>(new ApiResponse<>("Verification mail resent"), HttpStatus.OK);
             } else {
+                log.warn("[resend-verify-mail] User {} already verified",resendDto.email());
                 return new ResponseEntity<>(new ApiResponse<>("User already verified"), HttpStatus.BAD_REQUEST);
             }
         } catch (MessagingException e) {

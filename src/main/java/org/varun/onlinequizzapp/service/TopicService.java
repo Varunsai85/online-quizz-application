@@ -3,6 +3,7 @@ package org.varun.onlinequizzapp.service;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ import org.varun.onlinequizzapp.repository.TopicRepository;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TopicService {
@@ -25,6 +27,7 @@ public class TopicService {
     public ResponseEntity<?> getTopics() {
         List<Topic> topics = topicRepo.findAll();
         List<TopicResponseDto> responses = topics.stream().map(topic -> new TopicResponseDto(topic.getId(), topic.getName(), topic.getDescription())).toList();
+        log.info("[Get-Topics] All topics fetched successfully");
         return new ResponseEntity<>(new ApiResponse<>("All topics fetched", responses), HttpStatus.OK);
     }
 
@@ -37,6 +40,7 @@ public class TopicService {
                 .description(input.description().trim())
                 .build();
         topicRepo.save(newTopic);
+        log.info("[Add-Topic] New Topic has been created successfully");
         return new ResponseEntity<>(new ApiResponse<>("Topic created successfully"), HttpStatus.CREATED);
     }
 
@@ -50,6 +54,7 @@ public class TopicService {
 
         topicRepo.deleteById(id);
         String message = force ? "Topic and associated quizzes are deleted" : "Topic deleted successfully";
+        log.info("[Delete-Topic] Topic with id {}, deleted successfully",id);
         return new ResponseEntity<>(new ApiResponse<>(message), HttpStatus.OK);
     }
 
@@ -74,6 +79,7 @@ public class TopicService {
         }
 
         Topic updatedTopic = topicRepo.save(topic);
+        log.info("[Update_Topic] Topic with id {}, updated successfully",id);
         return new ResponseEntity<>(new ApiResponse<>("Topic updated successfully", updatedTopic), HttpStatus.OK);
     }
 }
