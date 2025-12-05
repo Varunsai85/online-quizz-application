@@ -26,7 +26,7 @@ public class TopicService {
 
     public ResponseEntity<?> getTopics() {
         List<Topic> topics = topicRepo.findAll();
-        List<TopicResponseDto> responses = topics.stream().map(topic -> new TopicResponseDto(topic.getId(), topic.getName(), topic.getDescription())).toList();
+        List<TopicResponseDto> responses = topics.stream().map(this::mapToResponseDto).toList();
         log.info("[Get-Topics] All topics fetched successfully");
         return new ResponseEntity<>(new ApiResponse<>(true, "All topics fetched", responses), HttpStatus.OK);
     }
@@ -85,12 +85,16 @@ public class TopicService {
 
     public ResponseEntity<?> getTopicWithId(Long id) {
         Topic topic = topicRepo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Topic not found"));
-        TopicResponseDto response = new TopicResponseDto(
+        TopicResponseDto response = mapToResponseDto(topic);
+        log.info("[Get-Topic] Topic with id {}, fetched successfully", id);
+        return new ResponseEntity<>(new ApiResponse<>(true, "Topic fetched successfully", response), HttpStatus.OK);
+    }
+
+    private TopicResponseDto mapToResponseDto(Topic topic) {
+        return new TopicResponseDto(
                 topic.getId(),
                 topic.getName(),
                 topic.getDescription()
         );
-        log.info("[Get-Topic] Topic with id {}, fetched successfully", id);
-        return new ResponseEntity<>(new ApiResponse<>(true, "Topic fetched successfully", response), HttpStatus.OK);
     }
 }

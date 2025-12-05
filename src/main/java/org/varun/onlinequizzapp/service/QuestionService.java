@@ -36,15 +36,7 @@ public class QuestionService {
     @Transactional
     public ResponseEntity<?> getAllQuestions() {
         List<Question> questions = questionRepo.findAll();
-        List<QuestionResponseDto> responses = questions.stream().map(question -> new QuestionResponseDto(question.getId(),
-                question.getTitle(),
-                question.getQuiz().getId(),
-                question.getQuestionOptions()
-                        .stream()
-                        .map(option -> new OptionResponseDto(option.getId(),
-                                option.getOptionText(),
-                                option.getIsCorrect()))
-                        .toList())).toList();
+        List<QuestionResponseDto> responses = questions.stream().map(this::mapToResponseDto).toList();
         log.info("[Get-Questions] All questions fetched successfully");
         return new ResponseEntity<>(new ApiResponse<>(true, "All questions fetched successfully", responses), HttpStatus.OK);
     }
@@ -84,16 +76,7 @@ public class QuestionService {
 
     public ResponseEntity<?> getQuestionWithId(Long id) {
         Question question = questionRepo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found"));
-        QuestionResponseDto response = new QuestionResponseDto(
-                question.getId(),
-                question.getTitle(),
-                question.getQuiz().getId(),
-                question.getQuestionOptions().stream().map(option -> new OptionResponseDto(
-                        option.getId(),
-                        option.getOptionText(),
-                        option.getIsCorrect()
-                )).toList()
-        );
+        QuestionResponseDto response = mapToResponseDto(question);
         log.info("[Get-Question] Quiz with id {}, fetched successfully", id);
         return new ResponseEntity<>(new ApiResponse<>(true, "Question fetched successfully", response), HttpStatus.OK);
     }
@@ -167,5 +150,18 @@ public class QuestionService {
         optionRepo.delete(option);
         log.info("[Delete-Option] Option with id {}, deleted successfully", id);
         return new ResponseEntity<>(new ApiResponse<>(true, "Option deleted successfully"), HttpStatus.OK);
+    }
+
+    private QuestionResponseDto mapToResponseDto(Question question) {
+        return new QuestionResponseDto(
+                question.getId(),
+                question.getTitle(),
+                question.getQuiz().getId(),
+                question.getQuestionOptions()
+                        .stream()
+                        .map(option -> new OptionResponseDto(option.getId(),
+                                option.getOptionText(),
+                                option.getIsCorrect())).toList()
+        );
     }
 }

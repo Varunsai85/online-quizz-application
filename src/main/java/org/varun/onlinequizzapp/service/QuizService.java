@@ -29,14 +29,7 @@ public class QuizService {
     @Transactional(readOnly = true)
     public ResponseEntity<?> getAllQuizzes() {
         List<Quiz> quizzes = quizRepo.findAll();
-        List<QuizResponseDto> responses = quizzes.stream().map(quiz -> new QuizResponseDto(quiz.getId(),
-                quiz.getTitle(),
-                quiz.getDescription(),
-                quiz.getTopic().getName(),
-                quiz.getTimeLimitMinutes(),
-                quiz.getDifficultyLevel(),
-                quiz.getCreatedAt(),
-                quiz.getUpdatedAt())).toList();
+        List<QuizResponseDto> responses = quizzes.stream().map(this::mapToResponseDto).toList();
         log.info("[Get-Quizzes] All quizzes fetched successfully");
         return new ResponseEntity<>(new ApiResponse<>(true, "All quizzes fetched successfully", responses), HttpStatus.OK);
     }
@@ -92,14 +85,7 @@ public class QuizService {
     @Transactional
     public ResponseEntity<?> getQuizWithId(Long id) {
         Quiz quiz = quizRepo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Quiz not found"));
-        QuizResponseDto response = new QuizResponseDto(quiz.getId(),
-                quiz.getTitle(),
-                quiz.getDescription(),
-                quiz.getTopic().getName(),
-                quiz.getTimeLimitMinutes(),
-                quiz.getDifficultyLevel(),
-                quiz.getCreatedAt(),
-                quiz.getUpdatedAt());
+        QuizResponseDto response = mapToResponseDto(quiz);
         log.info("[Get-quiz] Quiz with id {}, fetched successfully", id);
         return new ResponseEntity<>(new ApiResponse<>(true, "Quiz fetched successfully", response), HttpStatus.OK);
     }
@@ -107,7 +93,13 @@ public class QuizService {
     public ResponseEntity<?> getQuizWithTopicId(Long topicId) {
         Topic topic = topicRepo.findById(topicId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Topic not found"));
         List<Quiz> quizzes = topic.getQuizzes();
-        List<QuizResponseDto> responses = quizzes.stream().map(quiz -> new QuizResponseDto(
+        List<QuizResponseDto> responses = quizzes.stream().map(this::mapToResponseDto).toList();
+        log.info("[Get-QuizOnTopic] Fetched all quizzes with topic id {}", topicId);
+        return new ResponseEntity<>(new ApiResponse<>(true, "Quizzes with the topic fetched successfully", responses), HttpStatus.OK);
+    }
+
+    private QuizResponseDto mapToResponseDto(Quiz quiz) {
+        return new QuizResponseDto(
                 quiz.getId(),
                 quiz.getTitle(),
                 quiz.getDescription(),
@@ -116,8 +108,6 @@ public class QuizService {
                 quiz.getDifficultyLevel(),
                 quiz.getCreatedAt(),
                 quiz.getUpdatedAt()
-        )).toList();
-        log.info("[Get-QuizOnTopic] Fetched all quizzes with topic id {}", topicId);
-        return new ResponseEntity<>(new ApiResponse<>(true, "Quizzes with the topic fetched successfully", responses), HttpStatus.OK);
+        );
     }
 }
