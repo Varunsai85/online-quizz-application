@@ -1,4 +1,10 @@
 package org.varun.onlinequizzapp.dto.userAnswers;
 
-public record UserAnswersResponseDto() {
+import java.time.LocalDateTime;
+
+public record UserAnswersResponseDto(
+        Long id,
+        Boolean isCorrect,
+        LocalDateTime answeredAt
+) {
 }
