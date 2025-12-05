@@ -103,4 +103,21 @@ public class QuizService {
         log.info("[Get-quiz] Quiz with id {}, fetched successfully",id);
         return new ResponseEntity<>(new ApiResponse<>("Quiz fetched successfully",response),HttpStatus.OK);
     }
+
+    public ResponseEntity<?> getQuizWithTopicId(Long topicId) {
+        Topic topic=topicRepo.findById(topicId).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Topic not found"));
+        List<Quiz> quizzes=topic.getQuizzes();
+        List<QuizResponseDto> responses=quizzes.stream().map(quiz -> new QuizResponseDto(
+                quiz.getId(),
+                quiz.getTitle(),
+                quiz.getDescription(),
+                quiz.getTopic().getName(),
+                quiz.getTimeLimitMinutes(),
+                quiz.getDifficultyLevel(),
+                quiz.getCreatedAt(),
+                quiz.getUpdatedAt()
+        )).toList();
+        log.info("[Get-QuizOnTopic] Fetched all quizzes with topic id {}",topicId);
+        return new ResponseEntity<>(new ApiResponse<>("Quizes with the topic fetched successfully",responses),HttpStatus.OK);
+    }
 }
