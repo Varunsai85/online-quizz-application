@@ -19,7 +19,7 @@ public class AccessDeniedExceptionHandler implements AccessDeniedHandler {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
-        ApiResponse<?> apiResponse = new ApiResponse<>(
+        ApiResponse<?> apiResponse = new ApiResponse<>(false,
                 accessDeniedException.getMessage()
         );
 
