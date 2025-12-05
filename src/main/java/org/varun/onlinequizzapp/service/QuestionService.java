@@ -22,10 +22,8 @@ import org.varun.onlinequizzapp.repository.QuestionOptionRepository;
 import org.varun.onlinequizzapp.repository.QuestionRepository;
 import org.varun.onlinequizzapp.repository.QuizRepository;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 @Slf4j
 @Service
@@ -47,28 +45,16 @@ public class QuestionService {
                                 option.getOptionText(),
                                 option.getIsCorrect()))
                         .toList())).toList();
+        log.info("[Get-Questions] All questions fetched successfully");
         return new ResponseEntity<>(new ApiResponse<>("All questions fetched successfully", responses), HttpStatus.OK);
     }
 
     @Transactional
-    public ResponseEntity<?> addQuestion(@Valid AddQuestionDto input) {
-        Quiz quiz = quizRepo.findById(input.quizId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Quiz with id: " + input.quizId() + " not found"));
-        if (questionRepo.existsQuestionByTitleIgnoreCase(input.title().trim())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Quiz with the title already exists");
-        }
-
-        boolean hasCorrectAnswer = input.options().stream().anyMatch(AddOptionDto::isCorrect);
-
-        Set<String> uniqueOptions = new HashSet<>();
-        for (AddOptionDto option : input.options()) {
-            String normalizedOption = option.optionText().trim();
-            if (!uniqueOptions.add(normalizedOption)) {
-                return new ResponseEntity<>(new ApiResponse<>("Duplicate Option Found", option.optionText()), HttpStatus.CONFLICT);
-            }
-        }
-
-        if (!hasCorrectAnswer) {
-            return new ResponseEntity<>(new ApiResponse<>("At least one option must be marked as correct"), HttpStatus.BAD_REQUEST);
+    public ResponseEntity<?> addQuestion(Long id, @Valid AddQuestionDto input) {
+        Quiz quiz = quizRepo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Quiz with id: " + id + " not found"));
+        Optional<Question> existingQuestion = questionRepo.findByTitleIgnoreCase(input.title().trim());
+        if (existingQuestion.isPresent() && existingQuestion.get().getQuiz().getId().equals(id)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Question with the title already exists in the quiz");
         }
 
         Question newQuestion = Question.builder()
@@ -76,16 +62,8 @@ public class QuestionService {
                 .quiz(quiz)
                 .build();
 
-        List<QuestionOption> options = input.options().stream()
-                .map(option -> QuestionOption.builder()
-                        .optionText(option.optionText())
-                        .isCorrect(option.isCorrect())
-                        .question(newQuestion)
-                        .build())
-                .toList();
-        newQuestion.setQuestionOptions(options);
-
         questionRepo.save(newQuestion);
+        log.info("[Add-Question] Successfully added question to quiz with id {}", id);
         return new ResponseEntity<>(new ApiResponse<>("Question Added successfully"), HttpStatus.CREATED);
     }
 

@@ -25,10 +25,10 @@ public class QuestionController {
         return questionService.getQuestionWithId(id);
     }
 
-    @PostMapping("add")
+    @PostMapping("add/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<?> addQuestion(@Valid @RequestBody AddQuestionDto input) {
-        return questionService.addQuestion(input);
+    public ResponseEntity<?> addQuestion(@PathVariable Long id, @Valid @RequestBody AddQuestionDto input) {
+        return questionService.addQuestion(id, input);
     }
 
     @PatchMapping("update/{id}")
