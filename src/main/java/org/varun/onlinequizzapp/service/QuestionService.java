@@ -46,7 +46,7 @@ public class QuestionService {
                                 option.getIsCorrect()))
                         .toList())).toList();
         log.info("[Get-Questions] All questions fetched successfully");
-        return new ResponseEntity<>(new ApiResponse<>("All questions fetched successfully", responses), HttpStatus.OK);
+        return new ResponseEntity<>(new ApiResponse<>(true, "All questions fetched successfully", responses), HttpStatus.OK);
     }
 
     @Transactional
@@ -64,7 +64,7 @@ public class QuestionService {
 
         questionRepo.save(newQuestion);
         log.info("[Add-Question] Successfully added question to quiz with id {}", id);
-        return new ResponseEntity<>(new ApiResponse<>("Question Added successfully"), HttpStatus.CREATED);
+        return new ResponseEntity<>(new ApiResponse<>(true, "Question Added successfully"), HttpStatus.CREATED);
     }
 
     @Transactional
@@ -73,13 +73,13 @@ public class QuestionService {
         String newTitle = input.title().trim();
         Optional<Question> existingQuestion = questionRepo.findByTitleIgnoreCase(newTitle);
         if (existingQuestion.isPresent() && !existingQuestion.get().getId().equals(question.getId()) && existingQuestion.get().getQuiz().getId().equals(question.getQuiz().getId())) {
-            return new ResponseEntity<>(new ApiResponse<>("Question already exists in the quiz"), HttpStatus.CONFLICT);
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Question already exists in the quiz");
         }
 
         question.setTitle(newTitle);
         questionRepo.save(question);
         log.info("[Update-Question] Question with id {}, updated successfully", id);
-        return new ResponseEntity<>(new ApiResponse<>("Question Updated successfully"), HttpStatus.OK);
+        return new ResponseEntity<>(new ApiResponse<>(true, "Question Updated successfully"), HttpStatus.OK);
     }
 
     public ResponseEntity<?> getQuestionWithId(Long id) {
@@ -95,14 +95,14 @@ public class QuestionService {
                 )).toList()
         );
         log.info("[Get-Question] Quiz with id {}, fetched successfully", id);
-        return new ResponseEntity<>(new ApiResponse<>("Question fetched successfully", response), HttpStatus.OK);
+        return new ResponseEntity<>(new ApiResponse<>(true, "Question fetched successfully", response), HttpStatus.OK);
     }
 
     public ResponseEntity<?> deleteQuestion(Long id) {
         Question question = questionRepo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question with id: " + id + " not found"));
         questionRepo.delete(question);
         log.info("[Delete-Question] Question with id {}, deleted successfully", id);
-        return new ResponseEntity<>(new ApiResponse<>("Question deleted successfully"), HttpStatus.OK);
+        return new ResponseEntity<>(new ApiResponse<>(true, "Question deleted successfully"), HttpStatus.OK);
     }
 
     @Transactional
@@ -112,13 +112,13 @@ public class QuestionService {
             int count = (int) question.getQuestionOptions().stream().filter(QuestionOption::getIsCorrect).count();
             if (count == 1) {
                 log.warn("[Add-Option] Question with id {}, already has a correct option", id);
-                return new ResponseEntity<>(new ApiResponse<>("Question already has a correct option"), HttpStatus.CONFLICT);
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Question already has a correct option");
             }
         }
         Optional<QuestionOption> existingOption = optionRepo.findByOptionTextIgnoreCase(input.optionText().trim());
         if (existingOption.isPresent() && existingOption.get().getQuestion().getId().equals(id)) {
             log.warn("[Add-Option] Option already exists in the question with id {}", id);
-            return new ResponseEntity<>(new ApiResponse<>("Option already exist"), HttpStatus.CONFLICT);
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Option already exist");
         }
         QuestionOption newOption = QuestionOption.builder()
                 .optionText(input.optionText().trim())
@@ -127,7 +127,7 @@ public class QuestionService {
                 .build();
         optionRepo.save(newOption);
         log.info("[Add-Option] Option added to the question with id {}", id);
-        return new ResponseEntity<>(new ApiResponse<>("Option created successfully"), HttpStatus.CREATED);
+        return new ResponseEntity<>(new ApiResponse<>(true, "Option created successfully"), HttpStatus.CREATED);
     }
 
     @Transactional
@@ -137,20 +137,20 @@ public class QuestionService {
 
         if (existingOption.isPresent() && !existingOption.get().getId().equals(option.getId()) && existingOption.get().getQuestion().getId().equals(option.getQuestion().getId())) {
             log.warn("[Update-Option] Option with id {}, already exists with the name", id);
-            return new ResponseEntity<>(new ApiResponse<>("Option already exists with the text"), HttpStatus.CONFLICT);
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Option already exists with the text");
         }
 
         if (option.getIsCorrect() && !input.isCorrect()) {
             int correctOptionsCount = (int) option.getQuestion().getQuestionOptions().stream().filter(QuestionOption::getIsCorrect).count();
             if (correctOptionsCount <= 1) {
                 log.warn("[Update-Option] Option with id {}, cannot be updated as incorrect, must choose another option as correct to make this incorrect", id);
-                return new ResponseEntity<>(new ApiResponse<>("Cannot mark this option as incorrect. At least ot option must be marked correct"), HttpStatus.BAD_REQUEST);
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot mark this option as incorrect. At least ot option must be marked correct");
             }
         }
         option.setOptionText(input.optionText().trim());
         option.setIsCorrect(input.isCorrect());
         log.info("[Update-Option] Option with id {}, updated successfully", id);
-        return new ResponseEntity<>(new ApiResponse<>("Option Updated Successfully"), HttpStatus.OK);
+        return new ResponseEntity<>(new ApiResponse<>(true, "Option Updated Successfully"), HttpStatus.OK);
     }
 
     @Transactional
@@ -161,11 +161,11 @@ public class QuestionService {
             int correctOptionCount = (int) option.getQuestion().getQuestionOptions().stream().filter(QuestionOption::getIsCorrect).count();
             if (correctOptionCount <= 1) {
                 log.warn("[Delete-Option] Option with id {}, cannot delete the option because it is only correct option", id);
-                return new ResponseEntity<>(new ApiResponse<>("Cannot delete this option because it it the only correct option"), HttpStatus.BAD_REQUEST);
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot delete this option because it it the only correct option");
             }
         }
         optionRepo.delete(option);
         log.info("[Delete-Option] Option with id {}, deleted successfully", id);
-        return new ResponseEntity<>(new ApiResponse<>("Option deleted successfully"), HttpStatus.OK);
+        return new ResponseEntity<>(new ApiResponse<>(true, "Option deleted successfully"), HttpStatus.OK);
     }
 }

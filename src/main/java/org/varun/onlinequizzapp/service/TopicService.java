@@ -28,12 +28,12 @@ public class TopicService {
         List<Topic> topics = topicRepo.findAll();
         List<TopicResponseDto> responses = topics.stream().map(topic -> new TopicResponseDto(topic.getId(), topic.getName(), topic.getDescription())).toList();
         log.info("[Get-Topics] All topics fetched successfully");
-        return new ResponseEntity<>(new ApiResponse<>("All topics fetched", responses), HttpStatus.OK);
+        return new ResponseEntity<>(new ApiResponse<>(true, "All topics fetched", responses), HttpStatus.OK);
     }
 
     public ResponseEntity<?> addTopic(@Valid AddTopicDto input) {
         if (topicRepo.existsTopicsByNameIgnoreCase(input.name().trim())) {
-            return new ResponseEntity<>(new ApiResponse<>("Topic with the name already exists"), HttpStatus.CONFLICT);
+            return new ResponseEntity<>(new ApiResponse<>(false, "Topic with the name already exists"), HttpStatus.CONFLICT);
         }
         Topic newTopic = Topic.builder()
                 .name(input.name().trim())
@@ -41,7 +41,7 @@ public class TopicService {
                 .build();
         topicRepo.save(newTopic);
         log.info("[Add-Topic] New Topic has been created successfully");
-        return new ResponseEntity<>(new ApiResponse<>("Topic created successfully"), HttpStatus.CREATED);
+        return new ResponseEntity<>(new ApiResponse<>(true, "Topic created successfully"), HttpStatus.CREATED);
     }
 
     @Transactional
@@ -49,27 +49,27 @@ public class TopicService {
         Topic topic = topicRepo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Topic with id: " + id + " not found"));
 
         if (!topic.getQuizzes().isEmpty() && !force) {
-            return new ResponseEntity<>(new ApiResponse<>("Topic has " + topic.getQuizzes().size() + " quizzes associated."), HttpStatus.CONFLICT);
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Topic has " + topic.getQuizzes().size() + " quizzes associated.");
         }
 
         topicRepo.deleteById(id);
         String message = force ? "Topic and associated quizzes are deleted" : "Topic deleted successfully";
-        log.info("[Delete-Topic] Topic with id {}, deleted successfully",id);
-        return new ResponseEntity<>(new ApiResponse<>(message), HttpStatus.OK);
+        log.info("[Delete-Topic] Topic with id {}, deleted successfully", id);
+        return new ResponseEntity<>(new ApiResponse<>(true, message), HttpStatus.OK);
     }
 
     public ResponseEntity<?> updateTopic(Long id, @Valid UpdateTopicDto input) {
         Topic topic = topicRepo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Topic with id: " + id + " not found"));
 
         if (input.name() == null && input.description() == null) {
-            return new ResponseEntity<>(new ApiResponse<>("Nothing to update"), HttpStatus.BAD_REQUEST);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nothing to update");
         }
 
         if (input.name() != null && !input.name().trim().isEmpty()) {
             String newName = input.name().trim();
             Optional<Topic> existingName = topicRepo.findByName(newName);
             if (existingName.isPresent() && !existingName.get().getId().equals(id)) {
-                return new ResponseEntity<>(new ApiResponse<>("Topic with this name already exists"), HttpStatus.CONFLICT);
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Topic with this name already exists");
             }
             topic.setName(newName);
         }
@@ -79,18 +79,18 @@ public class TopicService {
         }
 
         Topic updatedTopic = topicRepo.save(topic);
-        log.info("[Update_Topic] Topic with id {}, updated successfully",id);
-        return new ResponseEntity<>(new ApiResponse<>("Topic updated successfully", updatedTopic), HttpStatus.OK);
+        log.info("[Update_Topic] Topic with id {}, updated successfully", id);
+        return new ResponseEntity<>(new ApiResponse<>(true, "Topic updated successfully", updatedTopic), HttpStatus.OK);
     }
 
     public ResponseEntity<?> getTopicWithId(Long id) {
-        Topic topic=topicRepo.findById(id).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Topic not found"));
-        TopicResponseDto response=new TopicResponseDto(
+        Topic topic = topicRepo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Topic not found"));
+        TopicResponseDto response = new TopicResponseDto(
                 topic.getId(),
                 topic.getName(),
                 topic.getDescription()
         );
-        log.info("[Get-Topic] Topic with id {}, fetched successfully",id);
-        return new ResponseEntity<>(new ApiResponse<>("Topic fetched successfully",response),HttpStatus.OK);
+        log.info("[Get-Topic] Topic with id {}, fetched successfully", id);
+        return new ResponseEntity<>(new ApiResponse<>(true, "Topic fetched successfully", response), HttpStatus.OK);
     }
 }

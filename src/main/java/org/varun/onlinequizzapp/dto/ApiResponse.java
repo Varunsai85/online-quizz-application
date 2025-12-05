@@ -8,13 +8,16 @@ import lombok.Data;
 public class ApiResponse<T> {
     private T data;
     private String message;
+    private Boolean success;
 
-    public ApiResponse(String message, T data) {
+    public ApiResponse(Boolean success,String message, T data) {
+        this.success=success;
         this.message = message;
         this.data = data;
     }
 
-    public ApiResponse(String message) {
+    public ApiResponse(Boolean success,String message) {
+        this.success=success;
         this.message = message;
     }
 }

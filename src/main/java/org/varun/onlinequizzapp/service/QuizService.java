@@ -38,7 +38,7 @@ public class QuizService {
                 quiz.getCreatedAt(),
                 quiz.getUpdatedAt())).toList();
         log.info("[Get-Quizzes] All quizzes fetched successfully");
-        return new ResponseEntity<>(new ApiResponse<>("All quizzes fetched successfully", responses), HttpStatus.OK);
+        return new ResponseEntity<>(new ApiResponse<>(true, "All quizzes fetched successfully", responses), HttpStatus.OK);
     }
 
     public ResponseEntity<?> addQuiz(@Valid AddQuizDto input) {
@@ -55,44 +55,44 @@ public class QuizService {
                 .build();
         quizRepo.saveAndFlush(newQuiz);
         log.info("[Add-Quiz] Quiz created successfully");
-        return new ResponseEntity<>(new ApiResponse<>("Quiz created successfully"), HttpStatus.CREATED);
+        return new ResponseEntity<>(new ApiResponse<>(true, "Quiz created successfully"), HttpStatus.CREATED);
 
     }
 
     public ResponseEntity<?> deleteQuiz(Long id) {
-        Quiz quiz=quizRepo.findById(id).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Quiz with id: "+id+" not found"));
+        Quiz quiz = quizRepo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Quiz with id: " + id + " not found"));
         quizRepo.delete(quiz);
-        log.info("[Delete-Quiz] Quiz with id {}, deleted successfully",id);
-        return new ResponseEntity<>(new ApiResponse<>("Quiz with id: "+id+" deleted successfully"),HttpStatus.OK);
+        log.info("[Delete-Quiz] Quiz with id {}, deleted successfully", id);
+        return new ResponseEntity<>(new ApiResponse<>(true, "Quiz with id: " + id + " deleted successfully"), HttpStatus.OK);
     }
 
     public ResponseEntity<?> updateQuiz(Long id, @Valid UpdateQuizDto input) {
-        Quiz quiz=quizRepo.findById(id).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Quiz with id: "+id+" not found"));
-        if(input.title()!=null && !input.description().isEmpty()){
+        Quiz quiz = quizRepo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Quiz with id: " + id + " not found"));
+        if (input.title() != null && !input.description().isEmpty()) {
             quiz.setTitle(input.title().trim());
         }
-        if(input.description()!=null && !input.description().isEmpty()){
+        if (input.description() != null && !input.description().isEmpty()) {
             quiz.setDescription(input.description().trim());
         }
-        if(input.topicId()!=null){
-            Topic topic=topicRepo.findById(input.topicId()).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Topic with id: "+input.topicId()+" not found"));
+        if (input.topicId() != null) {
+            Topic topic = topicRepo.findById(input.topicId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Topic with id: " + input.topicId() + " not found"));
             quiz.setTopic(topic);
         }
-        if(input.timeLimit()!=null){
+        if (input.timeLimit() != null) {
             quiz.setTimeLimitMinutes(input.timeLimit());
         }
-        if(input.difficulty()!=null){
+        if (input.difficulty() != null) {
             quiz.setDifficultyLevel(input.difficulty());
         }
         quizRepo.save(quiz);
-        log.info("[Update-Quiz] Quiz with id {}, updated successfully",id);
-        return new ResponseEntity<>(new ApiResponse<>("Quiz has been Updated"),HttpStatus.OK);
+        log.info("[Update-Quiz] Quiz with id {}, updated successfully", id);
+        return new ResponseEntity<>(new ApiResponse<>(true, "Quiz has been Updated"), HttpStatus.OK);
     }
 
     @Transactional
     public ResponseEntity<?> getQuizWithId(Long id) {
-        Quiz quiz=quizRepo.findById(id).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Quiz not found"));
-        QuizResponseDto response=new QuizResponseDto(quiz.getId(),
+        Quiz quiz = quizRepo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Quiz not found"));
+        QuizResponseDto response = new QuizResponseDto(quiz.getId(),
                 quiz.getTitle(),
                 quiz.getDescription(),
                 quiz.getTopic().getName(),
@@ -100,14 +100,14 @@ public class QuizService {
                 quiz.getDifficultyLevel(),
                 quiz.getCreatedAt(),
                 quiz.getUpdatedAt());
-        log.info("[Get-quiz] Quiz with id {}, fetched successfully",id);
-        return new ResponseEntity<>(new ApiResponse<>("Quiz fetched successfully",response),HttpStatus.OK);
+        log.info("[Get-quiz] Quiz with id {}, fetched successfully", id);
+        return new ResponseEntity<>(new ApiResponse<>(true, "Quiz fetched successfully", response), HttpStatus.OK);
     }
 
     public ResponseEntity<?> getQuizWithTopicId(Long topicId) {
-        Topic topic=topicRepo.findById(topicId).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Topic not found"));
-        List<Quiz> quizzes=topic.getQuizzes();
-        List<QuizResponseDto> responses=quizzes.stream().map(quiz -> new QuizResponseDto(
+        Topic topic = topicRepo.findById(topicId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Topic not found"));
+        List<Quiz> quizzes = topic.getQuizzes();
+        List<QuizResponseDto> responses = quizzes.stream().map(quiz -> new QuizResponseDto(
                 quiz.getId(),
                 quiz.getTitle(),
                 quiz.getDescription(),
@@ -117,7 +117,7 @@ public class QuizService {
                 quiz.getCreatedAt(),
                 quiz.getUpdatedAt()
         )).toList();
-        log.info("[Get-QuizOnTopic] Fetched all quizzes with topic id {}",topicId);
-        return new ResponseEntity<>(new ApiResponse<>("Quizes with the topic fetched successfully",responses),HttpStatus.OK);
+        log.info("[Get-QuizOnTopic] Fetched all quizzes with topic id {}", topicId);
+        return new ResponseEntity<>(new ApiResponse<>(true, "Quizzes with the topic fetched successfully", responses), HttpStatus.OK);
     }
 }

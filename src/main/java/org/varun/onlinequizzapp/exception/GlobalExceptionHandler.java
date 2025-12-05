@@ -23,17 +23,17 @@ public class GlobalExceptionHandler {
                 .findFirst()
                 .orElse("Validation Failed");
 
-        return new ResponseEntity<>(new ApiResponse<>(errMessage), HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(new ApiResponse<>(false,errMessage), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<?> handleResponseStatusException(ResponseStatusException ex) {
-        return new ResponseEntity<>(new ApiResponse<>(ex.getMessage()), ex.getStatusCode());
+        return new ResponseEntity<>(new ApiResponse<>(false,ex.getMessage()), ex.getStatusCode());
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleException(Exception ex, HttpServletRequest req) {
         log.error("[{}] {} | Exception: {} | Message: {}", req.getMethod(), req.getRequestURI(), ex.getClass().getSimpleName(), ex.getMessage());
-        return new ResponseEntity<>(new ApiResponse<>("Something went wrong", ex.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(new ApiResponse<>(false,"Something went wrong", ex.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
