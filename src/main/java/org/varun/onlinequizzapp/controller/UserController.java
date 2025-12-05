@@ -22,7 +22,7 @@ public class UserController {
         try {
             return userService.getAllUsers();
         }catch (Exception e){
-            return new ResponseEntity<>(new ApiResponse<>("Needs admin privileges",e.getMessage()), HttpStatus.FORBIDDEN);
+            return new ResponseEntity<>(new ApiResponse<>(false,"Needs admin privileges",e.getMessage()), HttpStatus.FORBIDDEN);
         }
     }
 }
