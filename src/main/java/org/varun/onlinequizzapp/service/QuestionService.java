@@ -41,7 +41,6 @@ public class QuestionService {
         List<QuestionResponseDto> responses = questions.stream().map(question -> new QuestionResponseDto(question.getId(),
                 question.getTitle(),
                 question.getQuiz().getId(),
-                question.getOrderNumber(),
                 question.getQuestionOptions()
                         .stream()
                         .map(option -> new OptionResponseDto(option.getId(),
@@ -75,7 +74,6 @@ public class QuestionService {
         Question newQuestion = Question.builder()
                 .title(input.title().trim())
                 .quiz(quiz)
-                .orderNumber(input.order())
                 .build();
 
         List<QuestionOption> options = input.options().stream()
@@ -101,7 +99,6 @@ public class QuestionService {
         }
 
         question.setTitle(newTitle);
-        question.setOrderNumber(input.order());
         questionRepo.save(question);
         log.info("[Update-Question] Question with id {}, updated successfully", id);
         return new ResponseEntity<>(new ApiResponse<>("Question Updated successfully"), HttpStatus.OK);
@@ -113,7 +110,6 @@ public class QuestionService {
                 question.getId(),
                 question.getTitle(),
                 question.getQuiz().getId(),
-                question.getOrderNumber(),
                 question.getQuestionOptions().stream().map(option -> new OptionResponseDto(
                         option.getId(),
                         option.getOptionText(),

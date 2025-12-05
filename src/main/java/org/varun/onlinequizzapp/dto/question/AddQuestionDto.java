@@ -13,8 +13,6 @@ public record AddQuestionDto(
         String title,
         @NotNull(message = "Id for thr quiz is required")
         Long quizId,
-        @NotNull(message = "Order for the question is required")
-        Integer order,
         @NotNull(message = "Options for the question is required")
         @Size(min = 2,message = "At least 2 options are required")
         @Valid

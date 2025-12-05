@@ -24,15 +24,8 @@ public class Question {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "quiz_id", nullable = false)
     private Quiz quiz;
-    @Column(nullable = false)
-    private Integer orderNumber;
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<QuestionOption> questionOptions = new ArrayList<>();
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserAnswer> userAnswers = new ArrayList<>();
-
-    private void addOption(QuestionOption option){
-        questionOptions.add(option);
-        option.setQuestion(this);
-    }
 }
