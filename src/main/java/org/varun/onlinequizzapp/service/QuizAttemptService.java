@@ -12,7 +12,6 @@ import org.springframework.web.server.ResponseStatusException;
 import org.varun.onlinequizzapp.dto.ApiResponse;
 import org.varun.onlinequizzapp.dto.quizAttempt.QuizAttemptResponseDto;
 import org.varun.onlinequizzapp.dto.userAnswers.UserAnswersResponseDto;
-import org.varun.onlinequizzapp.model.Quiz;
 import org.varun.onlinequizzapp.model.QuizAttempt;
 import org.varun.onlinequizzapp.model.User;
 import org.varun.onlinequizzapp.repository.QuizRepository;
@@ -32,9 +31,9 @@ public class QuizAttemptService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");
         }
 
-        Quiz quiz = quizRepo.findById(quizId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Quiz not found"));
-        List<QuizAttempt> attempts = quiz.getQuizAttempts();
-        List<QuizAttemptResponseDto> responses = attempts.stream().map(this::mapToResponseDto).toList();
+        quizRepo.findById(quizId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Quiz not found"));
+        List<QuizAttempt> attempts = user.getQuizAttempts();
+        List<QuizAttemptResponseDto> responses = attempts.stream().filter(attempt -> attempt.getQuiz().getId().equals(quizId)).map(this::mapToResponseDto).toList();
         log.info("[Get-Attempts] Quiz attempts associated with quiz id {}, fetched successfully", quizId);
         return new ResponseEntity<>(new ApiResponse<>(true, "Quiz attempts fetched successfully", responses), HttpStatus.OK);
     }
