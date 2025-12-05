@@ -2,6 +2,7 @@ package org.varun.onlinequizzapp.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -14,6 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 @Entity
 @Table(name = "quiz_attempts")
+@Builder
 public class QuizAttempt {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,7 +35,6 @@ public class QuizAttempt {
     private Integer totalQuestions;
     @Column(nullable = false)
     private LocalDateTime startedAt;
-    @Column(nullable = false)
     private LocalDateTime completedAt;
     @Column(nullable = false)
     private Boolean isCompleted = false;
