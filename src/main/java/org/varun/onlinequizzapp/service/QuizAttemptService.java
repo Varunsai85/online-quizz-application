@@ -17,6 +17,7 @@ import org.varun.onlinequizzapp.model.QuizAttempt;
 import org.varun.onlinequizzapp.model.User;
 import org.varun.onlinequizzapp.repository.QuizAttemptRepository;
 import org.varun.onlinequizzapp.repository.QuizRepository;
+import org.varun.onlinequizzapp.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,14 +28,11 @@ import java.util.List;
 public class QuizAttemptService {
     private final QuizRepository quizRepo;
     private final QuizAttemptRepository attemptRepo;
+    private final UserRepository userRepo;
 
     @Transactional
     public ResponseEntity<?> getAttemptsFromQuizAndUserId(Long quizId) {
         User user = getCurrentUser();
-        if (user == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");
-        }
-
         quizRepo.findById(quizId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Quiz not found"));
         List<QuizAttempt> attempts = user.getQuizAttempts();
         List<QuizAttemptResponseDto> responses = attempts.stream().filter(attempt -> attempt.getQuiz().getId().equals(quizId)).map(this::mapToResponseDto).toList();
@@ -42,11 +40,9 @@ public class QuizAttemptService {
         return new ResponseEntity<>(new ApiResponse<>(true, "Quiz attempts fetched successfully", responses), HttpStatus.OK);
     }
 
+    @Transactional
     public ResponseEntity<?> addAttempt(Long quizId) {
         User user = getCurrentUser();
-        if (user == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");
-        }
         Quiz quiz = quizRepo.findById(quizId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Quiz not found"));
         List<QuizAttempt> userAttempts = user.getQuizAttempts().stream().filter(attempt -> attempt.getQuiz().getId().equals(quizId)).toList();
         boolean incompleteAttempt = userAttempts.stream().anyMatch(attempt -> !attempt.getIsCompleted());
@@ -61,6 +57,7 @@ public class QuizAttemptService {
                 .totalQuestions(quiz.getQuestions().size())
                 .attemptedQuestions(0)
                 .startedAt(LocalDateTime.now())
+                .isCompleted(false)
                 .build();
         attemptRepo.save(newAttempt);
         log.info("[Add-QuizAttempt] Successfully created attempt for quizId {} with userId {}", quiz.getId(), user.getId());
@@ -69,10 +66,10 @@ public class QuizAttemptService {
 
     private User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof User) {
-            return (User) authentication.getPrincipal();
+        if (authentication != null && authentication.getPrincipal() instanceof User currentUser) {
+            return userRepo.findById(currentUser.getId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
         }
-        return null;
+        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");
     }
 
     private QuizAttemptResponseDto mapToResponseDto(QuizAttempt attempt) {
