@@ -30,7 +30,7 @@ public class QuizAttempt {
     private Quiz quiz;
 
     @Column(nullable = false)
-    private Integer score = 0;
+    private Integer score;
     @Column(nullable = false)
     private Integer totalQuestions;
     @Column(nullable = false)
