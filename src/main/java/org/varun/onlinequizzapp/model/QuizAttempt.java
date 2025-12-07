@@ -30,9 +30,11 @@ public class QuizAttempt {
     private Quiz quiz;
 
     @Column(nullable = false)
-    private Integer score;
+    private Integer score = 0;
     @Column(nullable = false)
     private Integer totalQuestions;
+    @Column(nullable = false)
+    private Integer attemptedQuestions;
     @Column(nullable = false)
     private LocalDateTime startedAt;
     private LocalDateTime completedAt;
