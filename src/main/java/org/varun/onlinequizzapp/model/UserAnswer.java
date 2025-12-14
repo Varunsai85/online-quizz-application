@@ -2,6 +2,7 @@ package org.varun.onlinequizzapp.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Entity
 @Table(name = "user_answers")
+@Builder
 public class UserAnswer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
